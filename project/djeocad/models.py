@@ -8,3 +8,6 @@ class Drawing(models.Model):
         help_text=_("Name of the drawing"),
         max_length=50,
     )
+
+    def __str__(self):
+        return self.title
