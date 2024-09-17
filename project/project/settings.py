@@ -45,6 +45,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # third party
+    "leaflet",
+    "djgeojson",
+    # local
     "djeocad.apps.DjeocadConfig",
 ]
 
@@ -103,6 +107,12 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+LEAFLET_CONFIG = {
+    "DEFAULT_CENTER": (41.8988, 12.5451),
+    "DEFAULT_ZOOM": 10,
+    "RESET_VIEW": False,
+}
 
 
 # Internationalization

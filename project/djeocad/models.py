@@ -11,17 +11,6 @@ class Drawing(models.Model):
         help_text=_("Name of the drawing"),
         max_length=50,
     )
-    parent = models.ForeignKey(
-        "self",
-        on_delete=models.SET_NULL,
-        related_name="parent_drawing",
-        verbose_name=_("Parent Drawing"),
-        null=True,
-        blank=True,
-    )
-    image = models.ImageField(
-        _("Image"), upload_to="uploads/djeocad/images/", null=True, blank=True
-    )
     dxf = models.FileField(
         _("DXF file"),
         max_length=200,
@@ -33,6 +22,17 @@ class Drawing(models.Model):
                 ]
             )
         ],
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        related_name="parent_drawing",
+        verbose_name=_("Parent Drawing"),
+        null=True,
+        blank=True,
+    )
+    image = models.ImageField(
+        _("Image"), upload_to="uploads/djeocad/images/", null=True, blank=True
     )
     geom = PointField(_("Location"), null=True, blank=True)
     designx = models.FloatField(
