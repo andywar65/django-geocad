@@ -49,6 +49,34 @@ class GeoCADModelTest(TestCase):
         draw = Drawing.objects.get(title="Not referenced")
         self.assertEqual(draw.epsg, None)
 
+    def test_drawing_geom_none(self):
+        draw = Drawing.objects.get(title="Not referenced")
+        self.assertEqual(draw.geom, None)
+
+    def test_drawing_epsg_none_set_geom(self):
+        draw = Drawing.objects.get(title="Not referenced")
+        draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
+        draw.save()
+        self.assertEqual(int(draw.epsg), 32651)  # why string?
+
+    def test_drawing_epsg_none_set_parent(self):
+        draw = Drawing.objects.get(title="Not referenced")
+        parent = Drawing.objects.get(title="Referenced")
+        draw.parent = parent
+        draw.save()
+        self.assertEqual(draw.epsg, 32633)
+
     def test_drawing_epsg_yes(self):
         draw = Drawing.objects.get(title="Referenced")
         self.assertEqual(draw.epsg, 32633)
+
+    def test_drawing_geom_yes(self):
+        draw = Drawing.objects.get(title="Referenced")
+        self.assertEqual(draw.geom["coordinates"][0], 12.48293852819188)
+
+    def test_drawing_epsg_yes_set_geom(self):
+        draw = Drawing.objects.get(title="Referenced")
+        draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
+        draw.save()
+        # not implemented, should be 32651
+        self.assertEqual(int(draw.epsg), 32633)  # why string?
