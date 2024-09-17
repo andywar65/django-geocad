@@ -1,7 +1,15 @@
+import json
+from math import atan2, degrees
+
+import ezdxf
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from djgeojson.fields import PointField
+from ezdxf.lldxf.const import InvalidGeoDataException
+from pyproj import Transformer
+from pyproj.aoi import AreaOfInterest
+from pyproj.database import query_utm_crs_info
 
 
 class Drawing(models.Model):
@@ -57,5 +65,99 @@ class Drawing(models.Model):
         verbose_name = _("Drawing")
         verbose_name_plural = _("Drawings")
 
+    __original_dxf = None
+    __original_geom = None
+    __original_designx = None
+    __original_designy = None
+    __original_rotation = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_dxf = self.dxf
+        self.__original_geom = self.geom
+        self.__original_designx = self.designx
+        self.__original_designy = self.designy
+        self.__original_rotation = self.rotation
+
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        # save and eventually upload DXF
+        super().save(*args, **kwargs)
+        # check if we have coordinate system
+        if not self.epsg:
+            # check if user has inserted parent
+            if self.parent:
+                self.geom = self.parent.geom
+                self.epsg = self.parent.epsg
+                self.designx = self.parent.designx
+                self.designy = self.parent.designy
+                self.rotation = self.parent.rotation
+                super().save(*args, **kwargs)
+                # we have eveything we need, go ahead!
+                # extract_dxf(self, doc=None, refresh=True)
+                return
+            # check if user has inserted origin on map
+            elif self.geom:
+                # following conditional for test to work
+                if isinstance(self.geom, str):
+                    self.geom = json.loads(self.geom)
+                # let's find proper UTM
+                utm_crs_list = query_utm_crs_info(
+                    datum_name="WGS 84",
+                    area_of_interest=AreaOfInterest(
+                        west_lon_degree=self.geom["coordinates"][0],
+                        south_lat_degree=self.geom["coordinates"][1],
+                        east_lon_degree=self.geom["coordinates"][0],
+                        north_lat_degree=self.geom["coordinates"][1],
+                    ),
+                )
+                self.epsg = utm_crs_list[0].code
+                super().save(*args, **kwargs)
+                # we have eveything we need, go ahead!
+                # extract_dxf(self, doc=None, refresh=True)
+                return
+            # no user input, search for geodata in dxf
+            else:
+                doc = ezdxf.readfile(self.dxf.path)
+                msp = doc.modelspace()
+                geodata = msp.get_geodata()
+                if geodata:
+                    # check if valid XML and axis order
+                    try:
+                        self.epsg, axis = geodata.get_crs()
+                        if not axis:
+                            return
+                    except InvalidGeoDataException:
+                        return
+                    utm2world = Transformer.from_crs(self.epsg, 4326, always_xy=True)
+                    world_point = utm2world.transform(
+                        geodata.dxf.reference_point[0], geodata.dxf.reference_point[1]
+                    )
+                    self.geom = {"type": "Point", "coordinates": world_point}
+                    self.designx = geodata.dxf.design_point[0]
+                    self.designy = geodata.dxf.design_point[1]
+                    self.rotation = degrees(
+                        atan2(
+                            geodata.dxf.north_direction[0],
+                            geodata.dxf.north_direction[1],
+                        )
+                    )
+                    super().save(*args, **kwargs)
+                    # we have eveything we need, go ahead!
+                    # extract_dxf(self, doc)
+                return
+        # check if something changed
+        if (
+            self.__original_dxf != self.dxf
+            or self.__original_geom != self.geom
+            or self.__original_designx != self.designx
+            or self.__original_designy != self.designy
+            or self.__original_rotation != self.rotation
+        ):
+            pass
+            # all_layers = self.related_layers.all()
+            # if all_layers.exists():
+            #   all_layers.delete()
+            # extract_dxf(self, doc=None, refresh=True)
