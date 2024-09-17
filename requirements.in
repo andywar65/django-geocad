@@ -1,6 +1,7 @@
 django>=5.1,<6.0
 psycopg[binary,pool]
 environs[django]
+coverage
 django-leaflet
 django-geojson
 ezdxf
