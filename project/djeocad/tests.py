@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
-from .models import Drawing
+from .models import Drawing, Entity, Layer
 
 
 @override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT).joinpath("tests"))
@@ -29,6 +29,21 @@ class GeoCADModelTest(TestCase):
         draw2.title = "Referenced"
         draw2.dxf = SimpleUploadedFile("yesgeo.dxf", content, "image/x-dxf")
         draw2.save()
+        layer = Layer.objects.create(drawing=draw2, name="Layer")
+        Entity.objects.create(
+            layer=layer,
+            geom={
+                "type": "GeometryCollection",
+                "geometries": [
+                    {
+                        "type": "LineString",
+                        "coordinates": [
+                            [[12.523826, 41.90339], [12.523826, 41.903391]]
+                        ],
+                    }
+                ],
+            },
+        )
 
     def tearDown(self):
         """Checks existing files, then removes them.
