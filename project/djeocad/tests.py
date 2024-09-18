@@ -119,3 +119,62 @@ class GeoCADModelTest(TestCase):
             "layer": "Layer - Layer",
         }
         self.assertEqual(ent.popupContent, popup)
+
+    def test_entity_popup_layer_name_bleach(self):
+        layer = Layer.objects.get(name="Layer")
+        layer.name = "<scrip>alert('hello')</script>"
+        layer.save()
+        ent = Entity.objects.get(layer=layer)
+        popup = {
+            "content": "<p>Layer: alert('hello')</p>",
+            "color": "#FFFFFF",
+            "linetype": True,
+            "layer": "Layer - alert('hello')",
+        }
+        self.assertEqual(ent.popupContent, popup)
+
+    def test_entity_popup_data(self):
+        layer = Layer.objects.get(name="Layer")
+        ent = Entity.objects.get(layer=layer)
+        ent.data = {"foo": "bar"}
+        ent.save()
+        data = f"<ul><li>ID = {ent.id}</li>"
+        data += "<li>foo = bar</li></ul>"
+        popup = {
+            "content": "<p>Layer: Layer</p>" + data,
+            "color": "#FFFFFF",
+            "linetype": True,
+            "layer": "Layer - Layer",
+        }
+        self.assertEqual(ent.popupContent, popup)
+
+    def test_entity_popup_data_bleach(self):
+        layer = Layer.objects.get(name="Layer")
+        ent = Entity.objects.get(layer=layer)
+        ent.data = {"foo": "<scrip>alert('hello')</script>"}
+        ent.save()
+        data = f"<ul><li>ID = {ent.id}</li>"
+        data += "<li>foo = alert('hello')</li></ul>"
+        popup = {
+            "content": "<p>Layer: Layer</p>" + data,
+            "color": "#FFFFFF",
+            "linetype": True,
+            "layer": "Layer - Layer",
+        }
+        self.assertEqual(ent.popupContent, popup)
+
+    def test_entity_popup_data_attributes(self):
+        layer = Layer.objects.get(name="Layer")
+        ent = Entity.objects.get(layer=layer)
+        ent.data = {"attributes": {"foo": "bar"}}
+        ent.save()
+        data = f"<ul><li>ID = {ent.id}</li></ul>"
+        data += "<p>Attributes</p><ul>"
+        data += "<li>foo = bar</li></ul>"
+        popup = {
+            "content": "<p>Layer: Layer</p>" + data,
+            "color": "#FFFFFF",
+            "linetype": True,
+            "layer": "Layer - Layer",
+        }
+        self.assertEqual(ent.popupContent, popup)
