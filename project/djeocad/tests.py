@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
-from .models import Drawing, Entity, Layer
+from .models import Drawing, Entity, Layer, cad2hex
 
 
 @override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT).joinpath("tests"))
@@ -178,3 +178,11 @@ class GeoCADModelTest(TestCase):
             "layer": "Layer - Layer",
         }
         self.assertEqual(ent.popupContent, popup)
+
+    def test_cad2hex_tuple(self):
+        color = (128, 128, 128)
+        self.assertEqual(cad2hex(color), "#808080")
+
+    def test_cad2hex_default(self):
+        color = 128
+        self.assertEqual(cad2hex(color), "#00261C")

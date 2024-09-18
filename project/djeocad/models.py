@@ -9,6 +9,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from djgeojson.fields import GeometryCollectionField, PointField
+from ezdxf import colors
 from ezdxf.lldxf.const import InvalidGeoDataException
 from pyproj import Transformer
 from pyproj.aoi import AreaOfInterest
@@ -262,3 +263,15 @@ class Entity(models.Model):
             "linetype": self.layer.linetype,
             "layer": _("Layer - ") + nh3.clean(self.layer.name),
         }
+
+
+"""
+    Collection of utilities
+"""
+
+
+def cad2hex(color):
+    if isinstance(color, tuple):
+        return "#{:02x}{:02x}{:02x}".format(color[0], color[1], color[2])
+    rgb24 = colors.DXF_DEFAULT_COLORS[color]
+    return "#{:06X}".format(rgb24)
