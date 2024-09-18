@@ -15,6 +15,21 @@
 
 {% block content %}
   <h2>Drawing: {{ object.title }}</h2>
+  <details>
+    <summary>Menu</summary>
+    <ul>
+      <li>
+        <a href="/admin/djeocad/drawing/{{ object.id }}/change/">
+          Modify
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'djeocad:drawing_list' %}">
+          Back to list
+        </a>
+      </li>
+    </ul>
+  </details>
   <script id="marker_data" type="application/json">{{ object|geojsonfeature:"popupContent"|safe }}</script>
   {% include "djeocad/map_data.html" %}
   <script src="{% static 'djeocad/js/map_script.js'%}"></script>
