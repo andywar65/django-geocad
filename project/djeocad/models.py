@@ -2,10 +2,11 @@ import json
 from math import atan2, degrees
 
 import ezdxf
+from colorfield.fields import ColorField
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from djgeojson.fields import PointField
+from djgeojson.fields import GeometryCollectionField, PointField
 from ezdxf.lldxf.const import InvalidGeoDataException
 from pyproj import Transformer
 from pyproj.aoi import AreaOfInterest
@@ -161,3 +162,34 @@ class Drawing(models.Model):
             # if all_layers.exists():
             #   all_layers.delete()
             # extract_dxf(self, doc=None, refresh=True)
+
+
+class Layer(models.Model):
+
+    drawing = models.ForeignKey(
+        Drawing,
+        on_delete=models.CASCADE,
+        related_name="related_layers",
+        verbose_name=_("Drawing"),
+    )
+    name = models.CharField(
+        _("Layer name"),
+        max_length=50,
+    )
+    color_field = ColorField(default="#FFFFFF")
+    linetype = models.BooleanField(
+        _("Continuous linetype"),
+        default=True,
+    )
+    is_block = models.BooleanField(
+        default=False,
+        editable=False,
+    )
+    geom = GeometryCollectionField(
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = _("Layer")
+        verbose_name_plural = _("Layers")
+        ordering = ("name",)

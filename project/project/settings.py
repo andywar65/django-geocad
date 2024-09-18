@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     # third party
     "leaflet",
     "djgeojson",
+    "colorfield",
     # local
     "djeocad.apps.DjeocadConfig",
 ]
