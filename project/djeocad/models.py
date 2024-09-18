@@ -4,6 +4,7 @@ from math import atan2, degrees
 import ezdxf
 import nh3
 from colorfield.fields import ColorField
+from django.conf import settings
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -72,6 +73,26 @@ class Drawing(models.Model):
     __original_designx = None
     __original_designy = None
     __original_rotation = None
+    # blacklists in settings
+    layer_blacklist = settings.CAD_LAYER_BLACKLIST
+    name_blacklist = settings.CAD_BLOCK_BLACKLIST
+    entity_types = [
+        "POINT",
+        "LINE",
+        "LWPOLYLINE",
+        "POLYLINE",
+        "3DFACE",
+        "CIRCLE",
+        "ARC",
+        "ELLIPSE",
+        "SPLINE",
+        "HATCH",
+    ]
+    # TEXT overrides MTEXT
+    text_types = [
+        "MTEXT",
+        "TEXT",
+    ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

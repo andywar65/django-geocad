@@ -115,6 +115,14 @@ LEAFLET_CONFIG = {
     "RESET_VIEW": False,
 }
 
+CAD_BLOCK_BLACKLIST = [
+    "*Model_Space",
+    "DynamicInputDot",
+]
+CAD_LAYER_BLACKLIST = [
+    "Defpoints",
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
