@@ -1,5 +1,6 @@
 {% extends "djeocad/base.html" %}
 {% load static %}
+{% load i18n %}
 {% load leaflet_tags %}
 {% load geojson_tags %}
 
@@ -14,20 +15,20 @@
 {% endblock extra-head %}
 
 {% block content %}
-  <h2>All drawings</h2>
+  <h2>{% trans "All drawings" %}</h2>
   <details>
-    <summary>Menu</summary>
+    <summary>{% trans "Menu" %}</summary>
     <ul>
       <li>
         <a href="/admin/djeocad/drawing/add/">
-          Add drawing
+          {% trans "Add drawing" %}
         </a>
       </li>
       {% if unreferenced %}
         {% for unref in unreferenced %}
           <li>
             <a href="/admin/djeocad/drawing/{{ unref.id }}/change/">
-              Unreferenced drawing: {{ unref.title }}
+              {% trans "Unreferenced drawing" %}: {{ unref.title }}
             </a>
           </li>
         {% endfor %}

@@ -1,5 +1,6 @@
 {% extends "djeocad/base.html" %}
 {% load static %}
+{% load i18n %}
 {% load leaflet_tags %}
 {% load geojson_tags %}
 
@@ -14,18 +15,18 @@
 {% endblock extra-head %}
 
 {% block content %}
-  <h2>Drawing: {{ object.title }}</h2>
+  <h2>{% trans "Drawing" %}: {{ object.title }}</h2>
   <details>
-    <summary>Menu</summary>
+    <summary>{% trans "Menu" %}</summary>
     <ul>
       <li>
         <a href="/admin/djeocad/drawing/{{ object.id }}/change/">
-          Modify
+          {% trans "Modify" %}
         </a>
       </li>
       <li>
         <a href="{% url 'djeocad:drawing_list' %}">
-          Back to list
+          {% trans "Back to list" %}
         </a>
       </li>
     </ul>
