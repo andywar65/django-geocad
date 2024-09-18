@@ -9,6 +9,10 @@ class LayerInline(admin.TabularInline):
     fields = ("name", "color_field", "linetype")
     extra = 0
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.exclude(is_block=True)
+
 
 @admin.register(Drawing)
 class DrawingAdmin(LeafletGeoAdmin):
