@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # third party
+    "easy_thumbnails",
     "leaflet",
     "djgeojson",
     "colorfield",
