@@ -93,8 +93,7 @@ class GeoCADModelTest(TestCase):
         draw = Drawing.objects.get(title="Referenced")
         draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
         draw.save()
-        # not implemented, should be 32651
-        self.assertEqual(int(draw.epsg), 32633)  # why string?
+        self.assertEqual(int(draw.epsg), 32651)  # why string?
 
     def test_entity_popup(self):
         layer = Layer.objects.get(name="Layer")
