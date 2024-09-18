@@ -7,7 +7,7 @@ from django.views.generic import ListView
 from .models import Drawing
 
 
-class BaseListView(ListView):
+class DrawingListView(ListView):
     model = Drawing
     template_name = "djeocad/drawing_list.html"
 
