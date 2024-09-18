@@ -193,3 +193,23 @@ class Layer(models.Model):
         verbose_name = _("Layer")
         verbose_name_plural = _("Layers")
         ordering = ("name",)
+
+
+class Entity(models.Model):
+
+    layer = models.ForeignKey(
+        Layer,
+        on_delete=models.CASCADE,
+        related_name="related_entities",
+    )
+    data = models.JSONField(
+        null=True,
+    )
+    geom = GeometryCollectionField()
+    insertion = PointField(
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = _("Entity")
+        verbose_name_plural = _("Entities")
