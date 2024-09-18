@@ -1,0 +1,24 @@
+{% extends "djeocad/base.html" %}
+{% load static %}
+{% load leaflet_tags %}
+{% load geojson_tags %}
+
+{% block extra-head %}
+  {% leaflet_js %}
+  {% leaflet_css %}
+  <style>
+    .leaflet-container {  /* all maps */
+      height: 600px;
+    }
+  </style>
+{% endblock extra-head %}
+
+{% block content %}
+  <h2>All drawings</h2>
+  <script id="marker_data" type="application/json">{{ object_list|geojsonfeature:"popupContent"|safe }}</script>
+  {% include "djeocad/map_data.html" %}
+  <script src="{% static 'djeocad/js/map_script.js'%}"></script>
+  <div>
+    {% leaflet_map "mymap" callback="window.map_init" %}
+  </div>
+{% endblock content %}

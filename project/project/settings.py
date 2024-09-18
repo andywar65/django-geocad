@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     "djgeojson",
     "colorfield",
     # local
-    "djeocad.apps.DjeocadConfig",
+    "djeocad",
 ]
 
 MIDDLEWARE = [
