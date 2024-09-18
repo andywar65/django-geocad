@@ -15,6 +15,25 @@
 
 {% block content %}
   <h2>All drawings</h2>
+  <details>
+    <summary>Menu</summary>
+    <ul>
+      <li>
+        <a href="/admin/djeocad/drawing/add/">
+          Add drawing
+        </a>
+      </li>
+      {% if unreferenced %}
+        {% for unref in unreferenced %}
+          <li>
+            <a href="/admin/djeocad/drawing/{{ unref.id }}/change/">
+              Unreferenced drawing: {{ unref.title }}
+            </a>
+          </li>
+        {% endfor %}
+      {% endif %}
+    </ul>
+  </details>
   <script id="marker_data" type="application/json">{{ object_list|geojsonfeature:"popupContent"|safe }}</script>
   {% include "djeocad/map_data.html" %}
   <script src="{% static 'djeocad/js/map_script.js'%}"></script>
