@@ -2,6 +2,7 @@ import json
 from math import atan2, degrees
 
 import ezdxf
+import nh3
 from colorfield.fields import ColorField
 from django.core.validators import FileExtensionValidator
 from django.db import models
@@ -213,3 +214,30 @@ class Entity(models.Model):
     class Meta:
         verbose_name = _("Entity")
         verbose_name_plural = _("Entities")
+
+    @property
+    def popupContent(self):
+        if self.layer.is_block:
+            ltype = _("Block")
+        else:
+            ltype = _("Layer")
+        title_str = f"<p>{ltype}: {nh3.clean(self.layer.name)}</p>"
+        data = ""
+        if self.data:
+            data = f"<ul><li>ID = {self.id}</li>"
+            for k, v in self.data.items():
+                if k == "attributes":
+                    continue
+                data += f"<li>{k} = {nh3.clean(str(v))}</li>"
+            data += "</ul>"
+            if "attributes" in self.data:
+                data += "<p>Attributes</p><ul>"
+                for k, v in self.data["attributes"].items():
+                    data += f"<li>{nh3.clean(str(k))} = {nh3.clean(str(v))}</li>"
+                data += "</ul>"
+        return {
+            "content": title_str + data,
+            "color": self.layer.color_field,
+            "linetype": self.layer.linetype,
+            "layer": _("Layer - ") + nh3.clean(self.layer.name),
+        }
