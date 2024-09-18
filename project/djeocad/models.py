@@ -9,11 +9,13 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from djgeojson.fields import GeometryCollectionField, PointField
-from ezdxf import colors
+from ezdxf.addons import geo
 from ezdxf.lldxf.const import InvalidGeoDataException
+from ezdxf.math import Vec3
 from pyproj import Transformer
 from pyproj.aoi import AreaOfInterest
 from pyproj.database import query_utm_crs_info
+from shapely.geometry import shape
 
 
 class Drawing(models.Model):
@@ -273,5 +275,15 @@ class Entity(models.Model):
 def cad2hex(color):
     if isinstance(color, tuple):
         return "#{:02x}{:02x}{:02x}".format(color[0], color[1], color[2])
-    rgb24 = colors.DXF_DEFAULT_COLORS[color]
+    rgb24 = ezdxf.colors.DXF_DEFAULT_COLORS[color]
     return "#{:06X}".format(rgb24)
+
+
+def get_geo_proxy(entity, matrix, transformer):
+    geo_proxy = geo.proxy(entity)
+    if geo_proxy.geotype == "Polygon":
+        if not shape(geo_proxy).is_valid:
+            return False
+    geo_proxy.wcs_to_crs(matrix)
+    geo_proxy.apply(lambda v: Vec3(transformer.transform(v.x, v.y)))
+    return geo_proxy
