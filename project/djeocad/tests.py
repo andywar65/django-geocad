@@ -95,3 +95,27 @@ class GeoCADModelTest(TestCase):
         draw.save()
         # not implemented, should be 32651
         self.assertEqual(int(draw.epsg), 32633)  # why string?
+
+    def test_entity_popup(self):
+        layer = Layer.objects.get(name="Layer")
+        ent = Entity.objects.get(layer=layer)
+        popup = {
+            "content": "<p>Layer: Layer</p>",
+            "color": "#FFFFFF",
+            "linetype": True,
+            "layer": "Layer - Layer",
+        }
+        self.assertEqual(ent.popupContent, popup)
+
+    def test_entity_popup_is_block(self):
+        layer = Layer.objects.get(name="Layer")
+        layer.is_block = True
+        layer.save()
+        ent = Entity.objects.get(layer=layer)
+        popup = {
+            "content": "<p>Block: Layer</p>",
+            "color": "#FFFFFF",
+            "linetype": True,
+            "layer": "Layer - Layer",
+        }
+        self.assertEqual(ent.popupContent, popup)
