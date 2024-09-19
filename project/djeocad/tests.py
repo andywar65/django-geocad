@@ -46,8 +46,7 @@ class GeoCADModelTest(TestCase):
         )
 
     def tearDown(self):
-        """Checks existing files, then removes them.
-        Not working for filer paths"""
+        """Checks existing files, then removes them"""
         try:
             path = Path(settings.MEDIA_ROOT).joinpath("uploads/djeocad/dxf/")
             list = [e for e in path.iterdir() if e.is_file()]
@@ -94,6 +93,13 @@ class GeoCADModelTest(TestCase):
         draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
         draw.save()
         self.assertEqual(int(draw.epsg), 32651)  # why string?
+
+    def test_drawing_popup(self):
+        draw = Drawing.objects.get(title="Referenced")
+        popup = {
+            "content": f'<a href="/geocad/{draw.id}"><strong>{draw.title}</strong></a>',
+        }
+        self.assertEqual(draw.popupContent, popup)
 
     def test_entity_popup(self):
         layer = Layer.objects.get(name="Layer")
