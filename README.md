@@ -5,8 +5,32 @@ Show CAD drawings in interactive web maps, download previously uploaded files wi
 ## Requirements
 This app is tested on Django 5.1.1 and Python 3.12. It heavily relies on outstanding [ezdxf](https://ezdxf.mozman.at/) for handling DXF files, [pyproj](https://pyproj4.github.io/pyproj/stable/) for geographic projections, [shapely](https://shapely.readthedocs.io/en/stable/manual.html) for polygon verification, [django-leaflet](https://django-leaflet.readthedocs.io/en/latest/) for handling maps, [django-geojson](https://django-geojson.readthedocs.io/en/latest/) for storing geodata, [django-colorfield](https://github.com/fabiocaccamo/django-colorfield) for admin color fields. The library relies on [GDAL](https://gdal.org), which is system specific.
 ## Future installation from PyPI
-Activate your virtual environment and install with `python -m pip install django-geocad`. Start a Django project. Add `djeocad` to `INSTALLED_APPS` and `path('geocad/', include('djeocad.urls', namespace = 'djeocad'))` to your project `urls.py`, migrate and collectstatic. You also need to add initial map defaults to `settings.py` (these are the settings for Rome, change them to your location of choice):
-`LEAFLET_CONFIG = {"DEFAULT_CENTER": (41.8988, 12.5451), "DEFAULT_ZOOM": 10, "RESET_VIEW": False}`.
+Activate your virtual environment and install with:
+```
+python -m pip install django-geocad
+```
+In your Django project add:
+```python
+INSTALLED_APPS = [
+    # ...
+    "djeocad",
+]
+```
+```python
+# project/urls.py
+urlpatterns = [
+    # ...
+    path('geocad/', include('djeocad.urls', namespace = 'djeocad')),
+]
+```
+Migrate and collectstatic. You also need to add initial map defaults to `settings.py` (these are the settings for Rome, change them to your location of choice):
+```python
+LEAFLET_CONFIG = {
+    "DEFAULT_CENTER": (41.8988, 12.5451),
+    "DEFAULT_ZOOM": 10,
+    "RESET_VIEW": False
+}
+```
 Add two lists to `settings.py`, `CAD_BLOCK_BLACKLIST = []` and `CAD_LAYER_BLACKLIST = []`, where you can store names of layers and blocks you don't want to be processed.
 You also need a `base.html` template with `{% block extra-head %}` and `{% block content %}` template blocks (an example is provided among the templates).
 ## View drawings

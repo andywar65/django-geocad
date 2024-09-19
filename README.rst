@@ -29,14 +29,41 @@ for admin color fields. The library relies on
 Future installation from PyPI
 -----------------------------
 
-Activate your virtual environment and install with
-``python -m pip install django-geocad``. Start a Django project. Add
-``djeocad`` to ``INSTALLED_APPS`` and
-``path('geocad/', include('djeocad.urls', namespace = 'djeocad'))`` to
-your project ``urls.py``, migrate and collectstatic. You also need to
-add initial map defaults to ``settings.py`` (these are the settings for
-Rome, change them to your location of choice):
-``LEAFLET_CONFIG = {"DEFAULT_CENTER": (41.8988, 12.5451), "DEFAULT_ZOOM": 10, "RESET_VIEW": False}``.
+Activate your virtual environment and install with:
+
+::
+
+   python -m pip install django-geocad
+
+In your Django project add:
+
+.. code:: python
+
+   INSTALLED_APPS = [
+       # ...
+       "djeocad",
+   ]
+
+.. code:: python
+
+   # project/urls.py
+   urlpatterns = [
+       # ...
+       path('geocad/', include('djeocad.urls', namespace = 'djeocad')),
+   ]
+
+Migrate and collectstatic. You also need to add initial map defaults to
+``settings.py`` (these are the settings for Rome, change them to your
+location of choice):
+
+.. code:: python
+
+   LEAFLET_CONFIG = {
+       "DEFAULT_CENTER": (41.8988, 12.5451),
+       "DEFAULT_ZOOM": 10,
+       "RESET_VIEW": False
+   }
+
 Add two lists to ``settings.py``, ``CAD_BLOCK_BLACKLIST = []`` and
 ``CAD_LAYER_BLACKLIST = []``, where you can store names of layers and
 blocks you don't want to be processed. You also need a ``base.html``
