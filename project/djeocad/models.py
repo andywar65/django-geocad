@@ -438,6 +438,9 @@ def extract_dxf(drawing, doc=None, refresh=False):
                     )
     # create layer entities
     for name, layer_data in layer_table.items():
+        # next conditional is true TDD!
+        if len(layer_data["geometries"]) == 0:
+            continue
         Entity.objects.create(
             layer=layer_data["layer_obj"],
             geom={

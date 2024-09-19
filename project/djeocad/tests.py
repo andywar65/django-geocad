@@ -267,3 +267,35 @@ class GeoCADModelTest(TestCase):
             reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
         )
         self.assertTemplateUsed(response, "djeocad/drawing_detail.html")
+
+    def test_drawing_list_view_unreferenced_in_context(self):
+        response = self.client.get(
+            reverse(
+                "djeocad:drawing_list",
+            )
+        )
+        self.assertTrue("unreferenced" in response.context)
+
+    def test_drawing_list_view_unreferenced_length(self):
+        response = self.client.get(
+            reverse(
+                "djeocad:drawing_list",
+            )
+        )
+        self.assertEqual(len(response.context["unreferenced"]), 1)
+
+    def test_drawing_detail_view_lines_in_context(self):
+        draw = Drawing.objects.get(title="Referenced")
+        response = self.client.get(
+            reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
+        )
+        self.assertTrue("lines" in response.context)
+        self.assertTrue("layer_list" in response.context)
+
+    def test_drawing_detail_view_lines_length(self):
+        draw = Drawing.objects.get(title="Referenced")
+        response = self.client.get(
+            reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
+        )
+        self.assertEqual(len(response.context["lines"]), 4)
+        self.assertEqual(len(response.context["layer_list"]), 3)
