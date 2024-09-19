@@ -1,6 +1,5 @@
 from typing import Any
 
-from django.conf import settings
 from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, ListView
@@ -19,7 +18,6 @@ class DrawingListView(ListView):
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context["unreferenced"] = Drawing.objects.filter(epsg=None)
-        context["leaflet_config"] = settings.LEAFLET_CONFIG
         return context
 
 

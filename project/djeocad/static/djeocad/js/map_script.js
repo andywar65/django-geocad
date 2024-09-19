@@ -16,7 +16,6 @@ function map_init(map, options) {
 
     const base_map = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
-        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map);
 
@@ -39,12 +38,7 @@ function map_init(map, options) {
         L.geoJson(marker, {onEachFeature: onEachFeature}).addTo(marker_layer);
       }
       // fit bounds
-      if (collection.features.length !== 0) {
-        map.fitBounds(L.geoJson(collection).getBounds(), {padding: [30,30]});
-      } else {
-        let lc = JSON.parse(document.getElementById("leaflet_config").textContent);
-        map.setView(lc.DEFAULT_CENTER, lc.DEFAULT_ZOOM)
-      }
+      map.fitBounds(L.geoJson(collection).getBounds(), {padding: [30,30]});
       collection = JSON.parse(document.getElementById("line_data").textContent);
       if (collection !== null) {
         for (line of collection.features) {
