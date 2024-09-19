@@ -11,6 +11,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "django-geocad"
 version = "0.1.0"
+authors = [
+  { name="andywar65", email="andy.war1965@gmail.com" },
+]
 description = "Django app that imports CAD drawings in Leaflet.js maps"
 readme = "README.rst"
 license = {file = "LICENSE"}
