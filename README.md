@@ -13,6 +13,10 @@ In your Django project add:
 ```python
 INSTALLED_APPS = [
     # ...
+    "easy_thumbnails",
+    "leaflet",
+    "djgeojson",
+    "colorfield",
     "djeocad",
 ]
 ```

@@ -40,8 +40,12 @@ In your Django project add:
 .. code:: python
 
    INSTALLED_APPS = [
-       # ...
-       "djeocad",
+      # ...
+      "easy_thumbnails",
+      "leaflet",
+      "djgeojson",
+      "colorfield",
+      "djeocad",
    ]
 
 .. code:: python
