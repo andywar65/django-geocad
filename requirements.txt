@@ -8,8 +8,6 @@ asgiref==3.8.1
     # via django
 certifi==2024.8.30
     # via pyproj
-coverage==7.6.1
-    # via -r requirements.in
 dj-database-url==2.2.0
     # via environs
 dj-email-url==1.0.6

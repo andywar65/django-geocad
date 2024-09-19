@@ -5,30 +5,32 @@ target-version = ['py312']
 profile = "black"
 
 [build-system]
-requires = ["setuptools >= 40.9.0", "wheel"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-geocad"
-version = "1.0.0"
+version = "0.1.0"
 description = "Django app that imports CAD drawings in Leaflet.js maps"
-readme = "README.md"
+readme = "README.rst"
 license = {file = "LICENSE"}
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Web Environment",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Framework :: Django",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Topic :: Software Development :: Libraries :: Application Frameworks",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.12",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.8"
 dependencies = [
-    "Django>=5.1.1",
+    "Django==5.1.1",
+    "django-colorfield==0.11.0",
+    "django-geojson==4.1.0",
+    "django-leaflet==0.30.1",
+    "easy-thumbnails==2.10",
+    "ezdxf==1.3.3",
+    "nh3==0.2.18",
+    "pyproj==3.6.1",
+    "shapely==2.0.6",
 ]
 
 [project.urls]
