@@ -3,6 +3,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from .models import Drawing, Entity, Layer, cad2hex
 
@@ -236,3 +237,18 @@ class GeoCADModelTest(TestCase):
     def test_cad2hex_default(self):
         color = 128
         self.assertEqual(cad2hex(color), "#00261C")
+
+    def test_drawing_list_view_status_code(self):
+        response = self.client.get(
+            reverse(
+                "djeocad:drawing_list",
+            )
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_drawing_detail_view_status_code(self):
+        draw = Drawing.objects.get(title="Referenced")
+        response = self.client.get(
+            reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
+        )
+        self.assertEqual(response.status_code, 200)
