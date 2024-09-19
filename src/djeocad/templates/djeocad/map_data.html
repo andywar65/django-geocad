@@ -1,0 +1,4 @@
+{% load geojson_tags %}
+
+<script id="line_data" type="application/json">{{ lines|geojsonfeature:"popupContent"|safe }}</script>
+{{ layer_list|json_script:"layer_data" }}
