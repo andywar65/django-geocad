@@ -26,8 +26,8 @@ for storing geodata,
 for admin color fields. The library relies on
 `GDAL <https://gdal.org>`__, which is system specific.
 
-Future installation from PyPI
------------------------------
+Installation from PyPI
+----------------------
 
 Activate your virtual environment and install with:
 
