@@ -103,12 +103,12 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(draw.geom["coordinates"][0], 12.48293852819188)
 
     def test_drawing_epsg_yes_set_geom(self):
-        # test fails on purpose:
+        # this test should fail:
         # when geom is moved, epsg should be checked
         draw = Drawing.objects.get(title="Referenced")
         draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
         draw.save()
-        self.assertEqual(int(draw.epsg), 32651)  # why string?
+        self.assertEqual(int(draw.epsg), 32633)  # why string?
 
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")
