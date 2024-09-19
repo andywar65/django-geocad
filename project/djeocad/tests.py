@@ -253,6 +253,20 @@ class GeoCADModelTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
 
+    def test_drawing_csv_view_status_code(self):
+        draw = Drawing.objects.get(title="Referenced")
+        response = self.client.get(
+            reverse("djeocad:drawing_csv", kwargs={"pk": draw.id})
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_drawing_download_view_status_code(self):
+        draw = Drawing.objects.get(title="Referenced")
+        response = self.client.get(
+            reverse("djeocad:drawing_csv", kwargs={"pk": draw.id})
+        )
+        self.assertEqual(response.status_code, 200)
+
     def test_drawing_list_view_template(self):
         response = self.client.get(
             reverse(
