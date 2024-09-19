@@ -15,9 +15,8 @@
 {% endblock extra-head %}
 
 {% block content %}
-  <h2>{% trans "Drawing" %}: {{ object.title }}</h2>
   <details>
-    <summary>{% trans "Menu" %}</summary>
+    <summary style="font-size: 1.875em;">{% trans "Drawing" %}: {{ object.title }}</summary>
     <ul>
       <li>
         <a href="/admin/djeocad/drawing/{{ object.id }}/change/">
