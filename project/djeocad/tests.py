@@ -25,9 +25,15 @@ class GeoCADModelTest(TestCase):
         )
         with open(dxf_path, "rb") as f:
             content = f.read()
+        img_path = Path(settings.BASE_DIR).joinpath(
+            "djeocad/static/djeocad/tests/image.jpg"
+        )
+        with open(img_path, "rb") as fi:
+            img_content = fi.read()
         draw2 = Drawing()
         draw2.title = "Referenced"
         draw2.dxf = SimpleUploadedFile("yesgeo.dxf", content, "image/x-dxf")
+        draw2.image = SimpleUploadedFile("image.jpg", img_content, "image/jpeg")
         draw2.save()
         layer = Layer.objects.create(drawing=draw2, name="Layer")
         Entity.objects.create(
@@ -45,10 +51,18 @@ class GeoCADModelTest(TestCase):
             },
         )
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         """Checks existing files, then removes them"""
         try:
             path = Path(settings.MEDIA_ROOT).joinpath("uploads/djeocad/dxf/")
+            list = [e for e in path.iterdir() if e.is_file()]
+            for file in list:
+                Path(file).unlink()
+        except FileNotFoundError:
+            pass
+        try:
+            path = Path(settings.MEDIA_ROOT).joinpath("uploads/djeocad/images/")
             list = [e for e in path.iterdir() if e.is_file()]
             for file in list:
                 Path(file).unlink()
@@ -89,15 +103,28 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(draw.geom["coordinates"][0], 12.48293852819188)
 
     def test_drawing_epsg_yes_set_geom(self):
+        # test fails on purpose:
+        # when geom is moved, epsg should be checked
         draw = Drawing.objects.get(title="Referenced")
         draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
         draw.save()
         self.assertEqual(int(draw.epsg), 32651)  # why string?
 
     def test_drawing_popup(self):
-        draw = Drawing.objects.get(title="Referenced")
+        draw = Drawing.objects.get(title="Not referenced")
         popup = {
             "content": f'<a href="/geocad/{draw.id}"><strong>{draw.title}</strong></a>',
+        }
+        self.assertEqual(draw.popupContent, popup)
+
+    def test_drawing_popup_image(self):
+        draw = Drawing.objects.get(title="Referenced")
+        string = (
+            '<img src="/media/uploads/djeocad/images/image.jpg.256x192_q85_crop.jpg">'
+        )
+        string += f'<br><a href="/geocad/{draw.id}"><strong>{draw.title}</strong></a>'
+        popup = {
+            "content": string,
         }
         self.assertEqual(draw.popupContent, popup)
 
