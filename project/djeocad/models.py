@@ -204,6 +204,74 @@ class Drawing(models.Model):
                 all_layers.delete()
             extract_dxf(self, doc=None, refresh=True)
 
+    def write_csv(self, writer):
+        writer_data = []
+        layers = self.related_layers.all()
+        for layer in layers:
+            entities = layer.related_entities.exclude(data=None)
+            for e in entities:
+                entity_data = {
+                    "id": e.id,
+                    "layer": layer.name,
+                    "data": e.data,
+                }
+                if e.insertion:
+                    entity_data["Latitude"] = e.insertion["coordinates"][0]
+                    entity_data["Longitude"] = e.insertion["coordinates"][1]
+                writer_data.append(entity_data)
+        writer.writerow(
+            [
+                _("ID"),
+                _("Layer"),
+                _("Block"),
+                _("Name"),
+                _("Surface"),
+                _("Perimeter"),
+                _("Height"),
+                _("Width"),
+                _("Rotation"),
+                _("X scale"),
+                _("Y scale"),
+                _("Latitude"),
+                _("Longitude"),
+                _("Attributes"),
+            ]
+        )
+        keys = [
+            "Block",
+            "Name",
+            "Surface",
+            "Perimeter",
+            "Height",
+            "Width",
+            "Rotation",
+            "X scale",
+            "Y scale",
+        ]
+        for wd in writer_data:
+            row = []
+            row.append(wd["id"])
+            row.append(wd["layer"])
+            for k in keys:
+                if k in wd["data"]:
+                    row.append(wd["data"][k])
+                else:
+                    row.append("")
+            if "Latitude" in wd:
+                row.append(wd["Latitude"])
+            else:
+                row.append("")
+            if "Longitude" in wd:
+                row.append(wd["Longitude"])
+            else:
+                row.append("")
+            if "attributes" in wd["data"]:
+                for attr, value in wd["data"]["attributes"].items():
+                    row.append(attr)
+                    row.append(value)
+            writer.writerow(row)
+        return writer
+
 
 class Layer(models.Model):
 

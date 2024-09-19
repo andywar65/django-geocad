@@ -25,6 +25,16 @@
         </a>
       </li>
       <li>
+        <a href="{% url 'djeocad:drawing_download' pk=object.id %}">
+          {% trans "Download DXF with Geodata" %}
+        </a>
+      </li>
+      <li>
+        <a href="{% url 'djeocad:drawing_csv' pk=object.id %}">
+          {% trans "Download CSV of entities" %}
+        </a>
+      </li>
+      <li>
         <a href="{% url 'djeocad:drawing_list' %}">
           {% trans "Back to list" %}
         </a>
