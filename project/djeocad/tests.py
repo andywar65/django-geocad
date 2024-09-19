@@ -211,6 +211,24 @@ class GeoCADModelTest(TestCase):
         }
         self.assertEqual(ent.popupContent, popup)
 
+    def test_room_entity_popup(self):
+        draw = Drawing.objects.get(title="Referenced")
+        one = Layer.objects.get(drawing=draw, name="one")
+        ent = Entity.objects.get(layer=one, data__Name="Room")
+        string = f"<p>Layer: {one.name}</p><ul>"
+        string += f"<li>ID = {ent.id}</li>"
+        string += f"<li>Name = {ent.data["Name"]}</li>"
+        string += f"<li>Height = {ent.data["Height"]}</li>"
+        string += f"<li>Surface = {ent.data["Surface"]}</li>"
+        string += f"<li>Perimeter = {ent.data["Perimeter"]}</li></ul>"
+        popup = {
+            "content": string,
+            "color": one.color_field,
+            "linetype": True,
+            "layer": f"Layer - {one.name}",
+        }
+        self.assertEqual(ent.popupContent, popup)
+
     def test_cad2hex_tuple(self):
         color = (128, 128, 128)
         self.assertEqual(cad2hex(color), "#808080")
