@@ -252,3 +252,18 @@ class GeoCADModelTest(TestCase):
             reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
         )
         self.assertEqual(response.status_code, 200)
+
+    def test_drawing_list_view_template(self):
+        response = self.client.get(
+            reverse(
+                "djeocad:drawing_list",
+            )
+        )
+        self.assertTemplateUsed(response, "djeocad/drawing_list.html")
+
+    def test_drawing_detail_view_template(self):
+        draw = Drawing.objects.get(title="Referenced")
+        response = self.client.get(
+            reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
+        )
+        self.assertTemplateUsed(response, "djeocad/drawing_detail.html")
