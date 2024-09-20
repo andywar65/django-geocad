@@ -12,6 +12,7 @@ env = Env()
 env.read_env()
 
 BASE_DIR = Path(__file__).parent / "src"
+REPO_DIR = Path(__file__).parent
 sys.path.insert(0, str(BASE_DIR))
 
 
@@ -48,6 +49,13 @@ def boot_django():
         STATIC_ROOT=env.str("STATIC_ROOT"),
         MEDIA_URL="/media/",
         MEDIA_ROOT=env.str("MEDIA_ROOT"),
+        TEMPLATES=[
+            {
+                "BACKEND": "django.template.backends.django.DjangoTemplates",
+                "DIRS": [REPO_DIR / "project/project/templates"],
+                "APP_DIRS": True,
+            },
+        ],
     )
 
     django.setup()
