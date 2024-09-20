@@ -4,7 +4,7 @@ Django app that imports CAD drawings in Leaflet maps
 Show CAD drawings in interactive web maps, download previously uploaded files with geo location, download CSV files with extracted data.
 ## Requirements
 This app is tested on Django 5.1.1 and Python 3.12. It heavily relies on outstanding [ezdxf](https://ezdxf.mozman.at/) for handling DXF files, [pyproj](https://pyproj4.github.io/pyproj/stable/) for geographic projections, [shapely](https://shapely.readthedocs.io/en/stable/manual.html) for polygon verification, [django-leaflet](https://django-leaflet.readthedocs.io/en/latest/) for handling maps, [django-geojson](https://django-geojson.readthedocs.io/en/latest/) for storing geodata, [django-colorfield](https://github.com/fabiocaccamo/django-colorfield) for admin color fields. The library relies on [GDAL](https://gdal.org), which is system specific.
-## Future installation from PyPI
+## Installation from PyPI
 Activate your virtual environment and install with:
 ```
 python -m pip install django-geocad
