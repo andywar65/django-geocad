@@ -11,8 +11,8 @@ from environs import Env
 env = Env()
 env.read_env()
 
-BASE_DIR = Path(__file__).parent / "src"
-REPO_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent / "src"
+REPO_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
 
@@ -44,7 +44,7 @@ def boot_django():
         ],
         TIME_ZONE="UTC",
         USE_TZ=True,
-        ROOT_URLCONF="tests.urls",
+        ROOT_URLCONF="urls",
         STATIC_URL="/static/",
         STATIC_ROOT=env.str("STATIC_ROOT"),
         MEDIA_URL="/media/",

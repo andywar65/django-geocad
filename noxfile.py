@@ -13,4 +13,4 @@ def test420(session):
 @nox.session(python=["3.10", "3.12"])
 def test510(session):
     session.install("django>=5.1,<5.2")
-    session.run("./load_tests.py", external=True)
+    session.run("./manage/test.py", external=True)
