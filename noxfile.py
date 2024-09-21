@@ -6,7 +6,7 @@ import nox
 @nox.session(python=["3.9", "3.10", "3.12"])
 def test420(session):
     session.install("django>=4.2,<4.3")
-    session.run("./load_tests.py", external=True)
+    session.run("./manage/test.py", external=True)
 
 
 # 5.0 of life April 2025
