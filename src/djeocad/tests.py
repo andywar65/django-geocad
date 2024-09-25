@@ -219,8 +219,8 @@ class GeoCADModelTest(TestCase):
         string = f"<p>Layer: {one.name}</p><ul>"
         string += f"<li>ID = {ent.id}</li>"
         string += f"<li>Name = {ent.data['Name']}</li>"
-        string += f"<li>Height = {ent.data['Height']}</li>"
         string += f"<li>Surface = {ent.data['Surface']}</li>"
+        string += f"<li>Height = {ent.data['Height']}</li>"
         string += f"<li>Perimeter = {ent.data['Perimeter']}</li></ul>"
         popup = {
             "content": string,
