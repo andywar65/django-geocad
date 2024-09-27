@@ -155,4 +155,5 @@ scratch and incorporated into the file.
 Next steps
 ----------
 
-Tests with unittest, missing some special conditions in DXF extraction.
+Tests with unittest, 98% coverage, missing some special conditions in 
+DXF extraction. Test for other Django and Python versions.

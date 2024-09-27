@@ -74,4 +74,4 @@ You can modify geolocation and appearance of drawings, but the `DXF` will not be
 ## About Geodata
 Geodata can be stored in DXF, but `ezdxf` library can't deal with all kind of Coordinate Reference Systems (CRS). If Geodata is not found in the file (or if the CRS is not compatible) `django-geocad` asks for user input: the location of a point both on the map and on the drawing coordinates system, and the rotation with respect to True North. The `pyproj` library hands over the best Universal Transverse Mercator CRS for the location (UTM is compatible with `ezdxf`). Thanks to UTM, Reference / Design Point and rotation input, Geodata can be built from scratch and incorporated into the file.
 ## Next steps
-Tests with unittest, missing some special conditions in DXF extraction. Test for other Django and Python versions.
+Tests with unittest, 98% coverage, missing some special conditions in DXF extraction. Test for other Django and Python versions.
