@@ -38,6 +38,7 @@ def boot_django():
         CAD_BLOCK_BLACKLIST=[
             "*Model_Space",
             "DynamicInputDot",
+            "blacklist",
         ],
         CAD_LAYER_BLACKLIST=[
             "Defpoints",
