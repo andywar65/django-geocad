@@ -145,7 +145,7 @@ class Drawing(models.Model):
             elif self.geom:
                 # following conditional for test to work (unused)
                 # if isinstance(self.geom, str):
-                    # self.geom = json.loads(self.geom)
+                # self.geom = json.loads(self.geom)
                 # let's find proper UTM
                 utm_crs_list = query_utm_crs_info(
                     datum_name="WGS 84",
@@ -422,7 +422,7 @@ def fake_geodata(drawing, geodata, utm_wcs, rot):
 def extract_dxf(drawing, doc=None, refresh=False):
     # following conditional for test to work (useless)
     # if isinstance(drawing.geom, str):
-        # drawing.geom = json.loads(drawing.geom)
+    # drawing.geom = json.loads(drawing.geom)
     # prepare transformers
     world2utm, utm2world, utm_wcs, rot = prepare_transformers(drawing)
     # get DXF
