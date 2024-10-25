@@ -1,0 +1,2 @@
+recursive-include src/djeocad/static *
+recursive-include src/djeocad/templates *

@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-geocad"
-version = "0.3.0"
+version = "0.4.0"
 authors = [
   { name="andywar65", email="andy.war1965@gmail.com" },
 ]
@@ -28,9 +28,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "Django>=4.2,<6.0",
-    "psycopg[binary,pool]",
-    "environs[django]",
+    "Django>=4.2",
     "django-colorfield",
     "django-geojson",
     "django-leaflet",
@@ -50,4 +48,6 @@ dev = [
     "nox",
     "twine",
     "coverage",
+    "psycopg[binary,pool]",
+    "environs[django]",
 ]
