@@ -77,6 +77,8 @@ class GeoCADModelTest(TestCase):
     def test_drawing_epsg_none(self):
         draw = Drawing.objects.get(title="Not referenced")
         self.assertEqual(draw.epsg, None)
+        doc = draw.get_geodata_from_dxf()
+        self.assertFalse(doc)
 
     def test_drawing_geom_none(self):
         draw = Drawing.objects.get(title="Not referenced")
@@ -116,6 +118,17 @@ class GeoCADModelTest(TestCase):
         draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
         draw.save()
         self.assertEqual(int(draw.epsg), 32651)  # why string?
+
+    def test_get_geodata_from_geom(self):
+        draw = Drawing.objects.get(title="Referenced")
+        draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
+        draw.get_geodata_from_geom()
+        self.assertEqual(int(draw.epsg), 32651)  # why string?
+
+    def test_get_geodata_from_dxf_yes(self):
+        draw = Drawing.objects.get(title="Referenced")
+        doc = draw.get_geodata_from_dxf()
+        self.assertIsNotNone(doc)
 
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")
