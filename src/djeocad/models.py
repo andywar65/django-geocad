@@ -1,4 +1,3 @@
-import json
 from math import atan2, cos, degrees, radians, sin
 
 import ezdxf
@@ -132,12 +131,7 @@ class Drawing(models.Model):
         if not self.epsg:
             # check if user has inserted parent
             if self.parent:
-                self.geom = self.parent.geom
-                self.epsg = self.parent.epsg
-                self.designx = self.parent.designx
-                self.designy = self.parent.designy
-                self.rotation = self.parent.rotation
-                super().save(*args, **kwargs)
+                self.get_geodata_from_parent(*args, **kwargs)
                 # we have eveything we need, go ahead!
                 extract_dxf(self, doc=None, refresh=True)
                 return
@@ -203,6 +197,15 @@ class Drawing(models.Model):
             if all_layers.exists():
                 all_layers.delete()
             extract_dxf(self, doc=None, refresh=True)
+
+    def get_geodata_from_parent(self, *args, **kwargs):
+        self.geom = self.parent.geom
+        self.epsg = self.parent.epsg
+        self.designx = self.parent.designx
+        self.designy = self.parent.designy
+        self.rotation = self.parent.rotation
+        self.parent = None
+        super().save(*args, **kwargs)
 
     def write_csv(self, writer):
         writer_data = []
