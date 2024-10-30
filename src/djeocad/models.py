@@ -193,10 +193,13 @@ class Drawing(models.Model):
             or self.__original_designy != self.designy
             or self.__original_rotation != self.rotation
         ):
-            all_layers = self.related_layers.all()
-            if all_layers.exists():
-                all_layers.delete()
+            self.delete_all_layers()
             extract_dxf(self, doc=None, refresh=True)
+
+    def delete_all_layers(self):
+        all_layers = self.related_layers.all()
+        if all_layers.exists():
+            all_layers.delete()
 
     def get_geodata_from_parent(self, *args, **kwargs):
         self.geom = self.parent.geom
