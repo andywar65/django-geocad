@@ -132,27 +132,11 @@ class Drawing(models.Model):
             # check if user has inserted parent
             if self.parent:
                 self.get_geodata_from_parent(*args, **kwargs)
-                # we have eveything we need, go ahead!
                 extract_dxf(self, doc=None, refresh=True)
                 return
             # check if user has inserted origin on map
             elif self.geom:
-                # following conditional for test to work (unused)
-                # if isinstance(self.geom, str):
-                # self.geom = json.loads(self.geom)
-                # let's find proper UTM
-                utm_crs_list = query_utm_crs_info(
-                    datum_name="WGS 84",
-                    area_of_interest=AreaOfInterest(
-                        west_lon_degree=self.geom["coordinates"][0],
-                        south_lat_degree=self.geom["coordinates"][1],
-                        east_lon_degree=self.geom["coordinates"][0],
-                        north_lat_degree=self.geom["coordinates"][1],
-                    ),
-                )
-                self.epsg = utm_crs_list[0].code
-                super().save(*args, **kwargs)
-                # we have eveything we need, go ahead!
+                self.get_geodata_from_geom(*args, **kwargs)
                 extract_dxf(self, doc=None, refresh=True)
                 return
             # no user input, search for geodata in dxf
@@ -185,6 +169,7 @@ class Drawing(models.Model):
                     # we have eveything we need, go ahead!
                     extract_dxf(self, doc)
                 return
+        # ok, we have coordinate system
         # check if user has inserted new parent
         if self.parent:
             self.delete_all_layers()
@@ -214,6 +199,19 @@ class Drawing(models.Model):
         self.designy = self.parent.designy
         self.rotation = self.parent.rotation
         self.parent = None
+        super().save(*args, **kwargs)
+
+    def get_geodata_from_geom(self, *args, **kwargs):
+        utm_crs_list = query_utm_crs_info(
+            datum_name="WGS 84",
+            area_of_interest=AreaOfInterest(
+                west_lon_degree=self.geom["coordinates"][0],
+                south_lat_degree=self.geom["coordinates"][1],
+                east_lon_degree=self.geom["coordinates"][0],
+                north_lat_degree=self.geom["coordinates"][1],
+            ),
+        )
+        self.epsg = utm_crs_list[0].code
         super().save(*args, **kwargs)
 
     def write_csv(self, writer):
