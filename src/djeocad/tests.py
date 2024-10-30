@@ -109,7 +109,7 @@ class GeoCADModelTest(TestCase):
         draw = Drawing.objects.get(title="Referenced")
         draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
         draw.save()
-        self.assertEqual(int(draw.epsg), 32633)  # why string?
+        self.assertEqual(int(draw.epsg), 32651)  # why string?
 
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")

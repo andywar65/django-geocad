@@ -176,6 +176,12 @@ class Drawing(models.Model):
             self.get_geodata_from_parent(*args, **kwargs)
             extract_dxf(self, doc=None, refresh=True)
             return
+        # check if user has modified origin on map
+        if self.geom and self.__original_geom != self.geom:
+            self.delete_all_layers()
+            self.get_geodata_from_geom(*args, **kwargs)
+            extract_dxf(self, doc=None, refresh=True)
+            return
         # check if something changed
         if (
             self.__original_dxf != self.dxf
