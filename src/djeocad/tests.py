@@ -94,6 +94,14 @@ class GeoCADModelTest(TestCase):
         draw.parent = parent
         draw.save()
         self.assertEqual(draw.epsg, 32633)
+        self.assertIsNone(draw.parent)
+
+    def test_get_geodata_from_parent(self):
+        draw = Drawing.objects.get(title="Not referenced")
+        parent = Drawing.objects.get(title="Referenced")
+        draw.parent = parent
+        draw.get_geodata_from_parent()
+        self.assertEqual(draw.epsg, 32633)
 
     def test_drawing_epsg_yes(self):
         draw = Drawing.objects.get(title="Referenced")
@@ -104,8 +112,6 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(draw.geom["coordinates"][0], 12.48293852819188)
 
     def test_drawing_epsg_yes_set_geom(self):
-        # this test should fail:
-        # when geom is moved, epsg should be checked
         draw = Drawing.objects.get(title="Referenced")
         draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
         draw.save()
