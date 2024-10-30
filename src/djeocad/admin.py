@@ -1,4 +1,5 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.utils.translation import gettext_lazy as _
 from leaflet.admin import LeafletGeoAdmin
 
 from .models import Drawing, Layer
@@ -23,3 +24,15 @@ class DrawingAdmin(LeafletGeoAdmin):
     inlines = [
         LayerInline,
     ]
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if not obj.epsg:
+            messages.add_message(
+                request,
+                messages.WARNING,
+                _(
+                    """GeoData missing. Upload a DXF with GeoData,
+                    a Parent Drawing or select a Reference Point on the map"""
+                ),
+            )
