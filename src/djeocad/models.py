@@ -185,6 +185,12 @@ class Drawing(models.Model):
                     # we have eveything we need, go ahead!
                     extract_dxf(self, doc)
                 return
+        # check if user has inserted new parent
+        if self.parent:
+            self.delete_all_layers()
+            self.get_geodata_from_parent(*args, **kwargs)
+            extract_dxf(self, doc=None, refresh=True)
+            return
         # check if something changed
         if (
             self.__original_dxf != self.dxf
