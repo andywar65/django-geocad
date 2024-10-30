@@ -141,32 +141,8 @@ class Drawing(models.Model):
                 return
             # no user input, search for geodata in dxf
             else:
-                doc = ezdxf.readfile(self.dxf.path)
-                msp = doc.modelspace()
-                geodata = msp.get_geodata()
-                if geodata:
-                    # check if valid XML and axis order
-                    try:
-                        self.epsg, axis = geodata.get_crs()
-                        if not axis:
-                            return
-                    except InvalidGeoDataException:
-                        return
-                    utm2world = Transformer.from_crs(self.epsg, 4326, always_xy=True)
-                    world_point = utm2world.transform(
-                        geodata.dxf.reference_point[0], geodata.dxf.reference_point[1]
-                    )
-                    self.geom = {"type": "Point", "coordinates": world_point}
-                    self.designx = geodata.dxf.design_point[0]
-                    self.designy = geodata.dxf.design_point[1]
-                    self.rotation = degrees(
-                        atan2(
-                            geodata.dxf.north_direction[0],
-                            geodata.dxf.north_direction[1],
-                        )
-                    )
-                    super().save(*args, **kwargs)
-                    # we have eveything we need, go ahead!
+                doc = self.get_geodata_from_dxf(*args, **kwargs)
+                if doc:
                     extract_dxf(self, doc)
                 return
         # ok, we have coordinate system
@@ -219,6 +195,35 @@ class Drawing(models.Model):
         )
         self.epsg = utm_crs_list[0].code
         super().save(*args, **kwargs)
+
+    def get_geodata_from_dxf(self, *args, **kwargs):
+        doc = ezdxf.readfile(self.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        if geodata:
+            # check if valid XML and axis order
+            try:
+                self.epsg, axis = geodata.get_crs()
+                if not axis:
+                    return False
+            except InvalidGeoDataException:
+                return False
+            utm2world = Transformer.from_crs(self.epsg, 4326, always_xy=True)
+            world_point = utm2world.transform(
+                geodata.dxf.reference_point[0], geodata.dxf.reference_point[1]
+            )
+            self.geom = {"type": "Point", "coordinates": world_point}
+            self.designx = geodata.dxf.design_point[0]
+            self.designy = geodata.dxf.design_point[1]
+            self.rotation = degrees(
+                atan2(
+                    geodata.dxf.north_direction[0],
+                    geodata.dxf.north_direction[1],
+                )
+            )
+            super().save(*args, **kwargs)
+            return doc
+        return False
 
     def write_csv(self, writer):
         writer_data = []
