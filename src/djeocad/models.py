@@ -142,6 +142,7 @@ class Drawing(models.Model):
             # no user input, search for geodata in dxf
             else:
                 doc = self.get_geodata_from_dxf(*args, **kwargs)
+                # if successful use geodata
                 if doc:
                     extract_dxf(self, doc)
                 return
@@ -158,11 +159,20 @@ class Drawing(models.Model):
             self.get_geodata_from_geom(*args, **kwargs)
             extract_dxf(self, doc=None, refresh=True)
             return
-        # check if something changed
+        # check if user changed dxf
+        if self.__original_dxf != self.dxf:
+            self.delete_all_layers()
+            doc = self.get_geodata_from_geom(*args, **kwargs)
+            # if successful use new geodata
+            if doc:
+                extract_dxf(self, doc)
+            # else use old geodata
+            elif self.geom:
+                extract_dxf(self, doc=None, refresh=True)
+            return
+        # check if something else changed
         if (
-            self.__original_dxf != self.dxf
-            or self.__original_geom != self.geom
-            or self.__original_designx != self.designx
+            self.__original_designx != self.designx
             or self.__original_designy != self.designy
             or self.__original_rotation != self.rotation
         ):
