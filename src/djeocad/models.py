@@ -162,7 +162,7 @@ class Drawing(models.Model):
         # check if user changed dxf
         if self.__original_dxf != self.dxf:
             self.delete_all_layers()
-            doc = self.get_geodata_from_geom(*args, **kwargs)
+            doc = self.get_geodata_from_dxf(*args, **kwargs)
             # if successful use new geodata
             if doc:
                 extract_dxf(self, doc)
