@@ -82,8 +82,6 @@ class GeoCADModelTest(TestCase):
     def test_drawing_epsg_none(self):
         draw = Drawing.objects.get(title="Not referenced")
         self.assertEqual(draw.epsg, None)
-        doc = draw.get_geodata_from_dxf()
-        self.assertFalse(doc)
 
     def test_drawing_geom_none(self):
         draw = Drawing.objects.get(title="Not referenced")
@@ -356,15 +354,6 @@ class GeoCADModelTest(TestCase):
                 "designx": 0,
                 "designy": 0,
                 "rotation": 0,
-                "related_layers-TOTAL_FORMS": 0,
-                "related_layers-INITIAL_FORMS": 0,
-                "related_layers-MIN_NUM_FORMS": 0,
-                "related_layers-MAX_NUM_FORMS": 1000,
-                "related_layers-__prefix__-id": "",
-                "related_layers-__prefix__-drawing": notref.id,
-                "related_layers-__prefix__-name": "",
-                "related_layers-__prefix__-color_field": "#FFFFFF",
-                "related_layers-__prefix__-linetype": "on",
             },
             follow=True,
         )
@@ -384,15 +373,6 @@ class GeoCADModelTest(TestCase):
                 "designx": 0,
                 "designy": 0,
                 "rotation": 0,
-                "related_layers-TOTAL_FORMS": 0,
-                "related_layers-INITIAL_FORMS": 0,
-                "related_layers-MIN_NUM_FORMS": 0,
-                "related_layers-MAX_NUM_FORMS": 1000,
-                "related_layers-__prefix__-id": "",
-                "related_layers-__prefix__-drawing": notref.id,
-                "related_layers-__prefix__-name": "",
-                "related_layers-__prefix__-color_field": "#FFFFFF",
-                "related_layers-__prefix__-linetype": "on",
             },
             follow=True,
         )
@@ -417,15 +397,6 @@ class GeoCADModelTest(TestCase):
                 "designx": 0,
                 "designy": 0,
                 "rotation": 0,
-                "related_layers-TOTAL_FORMS": 0,
-                "related_layers-INITIAL_FORMS": 0,
-                "related_layers-MIN_NUM_FORMS": 0,
-                "related_layers-MAX_NUM_FORMS": 1000,
-                "related_layers-__prefix__-id": "",
-                "related_layers-__prefix__-drawing": notref.id,
-                "related_layers-__prefix__-name": "",
-                "related_layers-__prefix__-color_field": "#FFFFFF",
-                "related_layers-__prefix__-linetype": "on",
             },
             follow=True,
         )
@@ -445,19 +416,23 @@ class GeoCADModelTest(TestCase):
                 "designx": 10,
                 "designy": 10,
                 "rotation": 30,
-                "related_layers-TOTAL_FORMS": 0,
-                "related_layers-INITIAL_FORMS": 0,
-                "related_layers-MIN_NUM_FORMS": 0,
-                "related_layers-MAX_NUM_FORMS": 1000,
-                "related_layers-__prefix__-id": "",
-                "related_layers-__prefix__-drawing": notref.id,
-                "related_layers-__prefix__-name": "",
-                "related_layers-__prefix__-color_field": "#FFFFFF",
-                "related_layers-__prefix__-linetype": "on",
             },
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
+
+    def test_drawing_get_geodata_from_dxf_false(self):
+        # we want to make sure that nogeo.dxf has not been polluted
+        dxf_path = Path(settings.BASE_DIR).joinpath(
+            "djeocad/static/djeocad/tests/nogeo.dxf"
+        )
+        with open(dxf_path, "rb") as f:
+            content = f.read()
+        draw = Drawing.objects.get(title="Not referenced")
+        draw.dxf = SimpleUploadedFile("nogeo.dxf", content, "image/x-dxf")
+        draw.save()
+        doc = draw.get_geodata_from_dxf()
+        self.assertFalse(doc)
 
     def test_drawing_change_view_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
