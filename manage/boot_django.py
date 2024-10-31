@@ -19,11 +19,13 @@ sys.path.insert(0, str(BASE_DIR))
 def boot_django():
     settings.configure(
         BASE_DIR=BASE_DIR,
+        SECRET_KEY="django-insecure-@!g#+nmv6464ignk@+mjx(r^+7e0ne6h6!o5y#h@u1d+$38(+9",
         DEBUG=True,
         DATABASES={"default": env.dj_db_url("DATABASE_URL")},
         INSTALLED_APPS=(
             "django.contrib.auth",
             "django.contrib.contenttypes",
+            "django.contrib.sessions",
             "easy_thumbnails",
             "leaflet",
             "djgeojson",

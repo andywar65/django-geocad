@@ -340,3 +340,23 @@ class GeoCADModelTest(TestCase):
         )
         self.assertEqual(len(response.context["lines"]), 5)
         self.assertEqual(len(response.context["layer_list"]), 4)
+
+    def test_drawing_add_parent_in_admin(self):
+        self.client.login(username="boss", password="p4s5w0r6")
+        notref = Drawing.objects.get(title="Not referenced")
+        yesref = Drawing.objects.get(title="Referenced")
+        response = self.client.post(
+            f"/admin/djeocad/drawing/{notref.id}/change",
+            {
+                "title": notref.title,
+                "parent": yesref.id,
+                "dxf": notref.dxf,
+                "image": "",
+                "geom": "",
+                "designx": 0,
+                "designy": 0,
+                "rotation": 0,
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
