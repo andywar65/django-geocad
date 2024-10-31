@@ -23,8 +23,10 @@ def boot_django():
         DEBUG=True,
         DATABASES={"default": env.dj_db_url("DATABASE_URL")},
         INSTALLED_APPS=(
+            "django.contrib.admin",
             "django.contrib.auth",
             "django.contrib.contenttypes",
+            "django.contrib.messages",
             "django.contrib.sessions",
             "easy_thumbnails",
             "leaflet",
@@ -37,20 +39,20 @@ def boot_django():
                 "BACKEND": "django.template.backends.django.DjangoTemplates",
                 "DIRS": [REPO_DIR / "project/project/templates"],
                 "APP_DIRS": True,
-                # "OPTIONS": {
-                #   "context_processors": [
-                #       "django.template.context_processors.request",
-                #       "django.contrib.auth.context_processors.auth",
-                #       "django.contrib.messages.context_processors.messages",
-                #   ],
-                # },
+                "OPTIONS": {
+                    "context_processors": [
+                        "django.template.context_processors.request",
+                        "django.contrib.auth.context_processors.auth",
+                        "django.contrib.messages.context_processors.messages",
+                    ],
+                },
             },
         ],
-        # MIDDLEWARE=[
-        #   "django.contrib.sessions.middleware.SessionMiddleware",
-        #   "django.contrib.auth.middleware.AuthenticationMiddleware",
-        #   "django.contrib.messages.middleware.MessageMiddleware",
-        # ],
+        MIDDLEWARE=[
+            "django.contrib.sessions.middleware.SessionMiddleware",
+            "django.contrib.auth.middleware.AuthenticationMiddleware",
+            "django.contrib.messages.middleware.MessageMiddleware",
+        ],
         LEAFLET_CONFIG={
             "DEFAULT_CENTER": (41.8988, 12.5451),
             "DEFAULT_ZOOM": 10,

@@ -369,3 +369,98 @@ class GeoCADModelTest(TestCase):
             follow=True,
         )
         self.assertEqual(response.status_code, 200)
+
+    def test_drawing_add_geom_in_admin(self):
+        self.client.login(username="boss", password="p4s5w0r6")
+        notref = Drawing.objects.get(title="Not referenced")
+        response = self.client.post(
+            f"/admin/djeocad/drawing/{notref.id}/change",
+            {
+                "title": notref.title,
+                "parent": "",
+                "dxf": notref.dxf.name,
+                "image": "",
+                "geom": {"type": "Point", "coordinates": [12.0, 42.0]},
+                "designx": 0,
+                "designy": 0,
+                "rotation": 0,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-INITIAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_drawing_change_dxf_in_admin(self):
+        dxf_path = Path(settings.BASE_DIR).joinpath(
+            "djeocad/static/djeocad/tests/yesgeo.dxf"
+        )
+        with open(dxf_path, "rb") as f:
+            content = f.read()
+        self.client.login(username="boss", password="p4s5w0r6")
+        notref = Drawing.objects.get(title="Not referenced")
+        response = self.client.post(
+            f"/admin/djeocad/drawing/{notref.id}/change",
+            {
+                "title": notref.title,
+                "parent": "",
+                "dxf": SimpleUploadedFile("yesgeo.dxf", content, "image/x-dxf"),
+                "image": "",
+                "geom": "",
+                "designx": 0,
+                "designy": 0,
+                "rotation": 0,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-INITIAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_drawing_change_other_stuff_in_admin(self):
+        self.client.login(username="boss", password="p4s5w0r6")
+        notref = Drawing.objects.get(title="Not referenced")
+        response = self.client.post(
+            f"/admin/djeocad/drawing/{notref.id}/change",
+            {
+                "title": notref.title,
+                "parent": "",
+                "dxf": notref.dxf.name,
+                "image": "",
+                "geom": "",
+                "designx": 10,
+                "designy": 10,
+                "rotation": 30,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-INITIAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_drawing_change_view_in_admin(self):
+        self.client.login(username="boss", password="p4s5w0r6")
+        notref = Drawing.objects.get(title="Not referenced")
+        response = self.client.get(f"/admin/djeocad/drawing/{notref.id}/change")
+        self.assertEqual(response.status_code, 200)
