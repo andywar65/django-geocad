@@ -32,6 +32,25 @@ def boot_django():
             "colorfield",
             "djeocad",
         ),
+        TEMPLATES=[
+            {
+                "BACKEND": "django.template.backends.django.DjangoTemplates",
+                "DIRS": [REPO_DIR / "project/project/templates"],
+                "APP_DIRS": True,
+                # "OPTIONS": {
+                #   "context_processors": [
+                #       "django.template.context_processors.request",
+                #       "django.contrib.auth.context_processors.auth",
+                #       "django.contrib.messages.context_processors.messages",
+                #   ],
+                # },
+            },
+        ],
+        # MIDDLEWARE=[
+        #   "django.contrib.sessions.middleware.SessionMiddleware",
+        #   "django.contrib.auth.middleware.AuthenticationMiddleware",
+        #   "django.contrib.messages.middleware.MessageMiddleware",
+        # ],
         LEAFLET_CONFIG={
             "DEFAULT_CENTER": (41.8988, 12.5451),
             "DEFAULT_ZOOM": 10,
@@ -52,13 +71,6 @@ def boot_django():
         STATIC_ROOT=env.str("STATIC_ROOT"),
         MEDIA_URL="/media/",
         MEDIA_ROOT=env.str("MEDIA_ROOT"),
-        TEMPLATES=[
-            {
-                "BACKEND": "django.template.backends.django.DjangoTemplates",
-                "DIRS": [REPO_DIR / "project/project/templates"],
-                "APP_DIRS": True,
-            },
-        ],
     )
 
     django.setup()
