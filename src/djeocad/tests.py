@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from django.conf import settings
+from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -36,6 +37,7 @@ class GeoCADModelTest(TestCase):
         draw2.dxf = SimpleUploadedFile("yesgeo.dxf", content, "image/x-dxf")
         draw2.image = SimpleUploadedFile("image.jpg", img_content, "image/jpeg")
         draw2.save()
+        User.objects.create_superuser("boss", "test@example.com", "p4s5w0r6")
         layer = Layer.objects.create(drawing=draw2, name="Layer")
         Entity.objects.create(
             layer=layer,
@@ -69,6 +71,9 @@ class GeoCADModelTest(TestCase):
                 Path(file).unlink()
         except FileNotFoundError:
             pass
+
+    def test_geocad_manager_group_exists(self):
+        self.assertTrue(Group.objects.filter(name="GeoCAD Manager").exists())
 
     def test_drawing_str_method(self):
         draw = Drawing.objects.get(title="Not referenced")
