@@ -346,7 +346,7 @@ class GeoCADModelTest(TestCase):
         notref = Drawing.objects.get(title="Not referenced")
         yesref = Drawing.objects.get(title="Referenced")
         response = self.client.post(
-            f"/admin/djeocad/drawing/{notref.id}/change",
+            f"/admin/djeocad/drawing/{notref.id}/change/",
             {
                 "title": notref.title,
                 "parent": yesref.id,
@@ -374,7 +374,7 @@ class GeoCADModelTest(TestCase):
         self.client.login(username="boss", password="p4s5w0r6")
         notref = Drawing.objects.get(title="Not referenced")
         response = self.client.post(
-            f"/admin/djeocad/drawing/{notref.id}/change",
+            f"/admin/djeocad/drawing/{notref.id}/change/",
             {
                 "title": notref.title,
                 "parent": "",
@@ -407,7 +407,7 @@ class GeoCADModelTest(TestCase):
         self.client.login(username="boss", password="p4s5w0r6")
         notref = Drawing.objects.get(title="Not referenced")
         response = self.client.post(
-            f"/admin/djeocad/drawing/{notref.id}/change",
+            f"/admin/djeocad/drawing/{notref.id}/change/",
             {
                 "title": notref.title,
                 "parent": "",
@@ -435,7 +435,7 @@ class GeoCADModelTest(TestCase):
         self.client.login(username="boss", password="p4s5w0r6")
         notref = Drawing.objects.get(title="Not referenced")
         response = self.client.post(
-            f"/admin/djeocad/drawing/{notref.id}/change",
+            f"/admin/djeocad/drawing/{notref.id}/change/",
             {
                 "title": notref.title,
                 "parent": "",
@@ -462,5 +462,5 @@ class GeoCADModelTest(TestCase):
     def test_drawing_change_view_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
         notref = Drawing.objects.get(title="Not referenced")
-        response = self.client.get(f"/admin/djeocad/drawing/{notref.id}/change")
+        response = self.client.get(f"/admin/djeocad/drawing/{notref.id}/change/")
         self.assertEqual(response.status_code, 200)
