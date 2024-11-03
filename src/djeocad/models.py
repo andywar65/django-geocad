@@ -525,7 +525,7 @@ def extract_dxf(drawing, doc=None, refresh=False):
                             },
                             data=entity_data,
                         )
-                    except ValueError:
+                    except (AttributeError, ValueError):
                         # not true polygon, add to layer entity
                         layer_table[e.dxf.layer]["geometries"].append(
                             geo_proxy.__geo_interface__
