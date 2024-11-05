@@ -235,6 +235,37 @@ class Drawing(models.Model):
             return doc
         return False
 
+    def extract_dxf(self, doc=None, refresh=False):
+        # prepare transformers
+        world2utm, utm2world, utm_wcs, rot = self.prepare_transformers()
+        # get DXF if none
+        if not doc:
+            doc = ezdxf.readfile(self.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        if not geodata or refresh:
+            # faking geodata
+            geodata = msp.new_geodata()
+            geodata = self.fake_geodata(geodata, utm_wcs, rot)
+            # replace stored DXF
+            doc.saveas(filename=self.dxf.path, encoding="utf-8", fmt="asc")
+
+    def prepare_transformers(self):
+        world2utm = Transformer.from_crs(4326, self.epsg, always_xy=True)
+        utm2world = Transformer.from_crs(self.epsg, 4326, always_xy=True)
+        utm_wcs = world2utm.transform(
+            self.geom["coordinates"][0], self.geom["coordinates"][1]
+        )
+        rot = radians(self.rotation)
+        return world2utm, utm2world, utm_wcs, rot
+
+    def fake_geodata(self, geodata, utm_wcs, rot):
+        geodata.coordinate_system_definition = get_epsg_xml(self)
+        geodata.dxf.design_point = (self.designx, self.designy, 0)
+        geodata.dxf.reference_point = utm_wcs
+        geodata.dxf.north_direction = (sin(rot), cos(rot))
+        return geodata
+
     def write_csv(self, writer):
         writer_data = []
         layers = self.related_layers.all()
