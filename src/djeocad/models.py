@@ -249,6 +249,29 @@ class Drawing(models.Model):
             geodata = self.fake_geodata(geodata, utm_wcs, rot)
             # replace stored DXF
             doc.saveas(filename=self.dxf.path, encoding="utf-8", fmt="asc")
+        # get transform matrix from true or fake geodata
+        m, epsg = geodata.get_crs_transformation(no_checks=True)  # noqa
+        layer_table = self.prepare_layer_table(doc)  # noqa
+
+    def prepare_layer_table(self, doc):
+        layer_table = {}
+        for layer in doc.layers:
+            if layer.dxf.name in self.layer_blacklist:
+                continue
+            if layer.rgb:
+                color = cad2hex(layer.rgb)
+            else:
+                color = cad2hex(layer.color)
+            layer_obj = Layer.objects.create(
+                drawing_id=self.id,
+                name=layer.dxf.name,
+                color_field=color,
+            )
+            layer_table[layer.dxf.name] = {
+                "layer_obj": layer_obj,
+                "geometries": [],
+            }
+        return layer_table
 
     def prepare_transformers(self):
         world2utm = Transformer.from_crs(4326, self.epsg, always_xy=True)
