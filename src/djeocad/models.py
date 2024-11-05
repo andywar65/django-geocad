@@ -255,6 +255,7 @@ class Drawing(models.Model):
         for e_type in self.entity_types:
             self.extract_entities(msp, e_type, m, utm2world, layer_table)
         self.create_layer_entities(layer_table)
+        self.save_blocks(doc, m, utm2world)
 
     def prepare_transformers(self):
         world2utm = Transformer.from_crs(4326, self.epsg, always_xy=True)
@@ -352,6 +353,29 @@ class Drawing(models.Model):
                     "type": "GeometryCollection",
                 },
             )
+
+    def save_blocks(self, doc, m, utm2world):
+        for block in doc.blocks:
+            if block.name in self.name_blacklist:
+                continue
+            geometries = []
+            for e_type in self.entity_types:
+                # extract entities
+                for e in block.query(e_type):
+                    geo_proxy = get_geo_proxy(e, m, utm2world)
+                    if geo_proxy:
+                        geometries.append(geo_proxy.__geo_interface__)
+            # create block as Layer
+            if not geometries == []:
+                Layer.objects.create(
+                    drawing_id=self.id,
+                    name=block.name,
+                    geom={
+                        "geometries": geometries,
+                        "type": "GeometryCollection",
+                    },
+                    is_block=True,
+                )
 
     def write_csv(self, writer):
         writer_data = []
