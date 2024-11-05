@@ -251,9 +251,10 @@ class Drawing(models.Model):
             doc.saveas(filename=self.dxf.path, encoding="utf-8", fmt="asc")
         # get transform matrix from true or fake geodata
         m, epsg = geodata.get_crs_transformation(no_checks=True)  # noqa
-        layer_table = self.prepare_layer_table(doc)  # noqa
+        layer_table = self.prepare_layer_table(doc)
         for e_type in self.entity_types:
             self.extract_entities(msp, e_type, m, utm2world, layer_table)
+        self.create_layer_entities(layer_table)
 
     def prepare_transformers(self):
         world2utm = Transformer.from_crs(4326, self.epsg, always_xy=True)
@@ -338,6 +339,19 @@ class Drawing(models.Model):
                     layer_table[e.dxf.layer]["geometries"].append(
                         geo_proxy.__geo_interface__
                     )
+
+    def create_layer_entities(self, layer_table):
+        for name, layer_data in layer_table.items():
+            # next conditional is true TDD!
+            if len(layer_data["geometries"]) == 0:
+                continue
+            Entity.objects.create(
+                layer=layer_data["layer_obj"],
+                geom={
+                    "geometries": layer_data["geometries"],
+                    "type": "GeometryCollection",
+                },
+            )
 
     def write_csv(self, writer):
         writer_data = []
