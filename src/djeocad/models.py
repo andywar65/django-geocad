@@ -256,6 +256,9 @@ class Drawing(models.Model):
             self.extract_entities(msp, e_type, m, utm2world, layer_table)
         self.create_layer_entities(layer_table)
         self.save_blocks(doc, m, utm2world)
+        # extract insertions
+        for ins in msp.query("INSERT"):
+            self.extract_insertions(ins, msp, m, utm2world, layer_table)
 
     def prepare_transformers(self):
         world2utm = Transformer.from_crs(4326, self.epsg, always_xy=True)
@@ -376,6 +379,47 @@ class Drawing(models.Model):
                     },
                     is_block=True,
                 )
+
+    def extract_insertions(self, ins, msp, m, utm2world, layer_table):
+        # filter blacklisted blocks
+        if ins.dxf.name in self.name_blacklist:
+            return
+        point = msp.add_point(ins.dxf.insert)
+        geo_proxy = get_geo_proxy(point, m, utm2world)
+        if geo_proxy:
+            insertion_point = geo_proxy.__geo_interface__
+        geometries = []
+        # 'generator' object has no attribute 'query'
+        for e in ins.virtual_entities():
+            if e.dxftype() in self.entity_types:
+                # extract entity
+                geo_proxy = get_geo_proxy(e, m, utm2world)
+                if geo_proxy:
+                    geometries.append(geo_proxy.__geo_interface__)
+        # prepare block data
+        data_ins = {}
+        data_ins["Block"] = ins.dxf.name
+        if ins.dxf.rotation:
+            data_ins["Rotation"] = round(ins.dxf.rotation, 2)
+        if ins.dxf.xscale:
+            data_ins["X scale"] = round(ins.dxf.xscale, 2)
+        if ins.dxf.yscale:
+            data_ins["Y scale"] = round(ins.dxf.yscale, 2)
+        if ins.attribs:
+            attrib_dict = {}
+            for attr in ins.attribs:
+                attrib_dict[attr.dxf.tag] = attr.dxf.text
+            data_ins["attributes"] = attrib_dict
+        # create Insertion
+        Entity.objects.create(
+            data=data_ins,
+            layer=layer_table[ins.dxf.layer]["layer_obj"],
+            insertion=insertion_point,
+            geom={
+                "geometries": geometries,
+                "type": "GeometryCollection",
+            },
+        )
 
     def write_csv(self, writer):
         writer_data = []
