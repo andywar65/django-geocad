@@ -132,32 +132,32 @@ class Drawing(models.Model):
             # check if user has inserted parent
             if self.parent:
                 self.get_geodata_from_parent(*args, **kwargs)
-                extract_dxf(self, doc=None, refresh=True)
+                self.extract_dxf(doc=None, refresh=True)
                 return
             # check if user has inserted origin on map
             elif self.geom:
                 self.get_geodata_from_geom(*args, **kwargs)
-                extract_dxf(self, doc=None, refresh=True)
+                self.extract_dxf(doc=None, refresh=True)
                 return
             # no user input, search for geodata in dxf
             else:
                 doc = self.get_geodata_from_dxf(*args, **kwargs)
                 # if successful use geodata
                 if doc:
-                    extract_dxf(self, doc)
+                    self.extract_dxf(doc)
                 return
         # ok, we have coordinate system
         # check if user has inserted new parent
         if self.parent:
             self.delete_all_layers()
             self.get_geodata_from_parent(*args, **kwargs)
-            extract_dxf(self, doc=None, refresh=True)
+            self.extract_dxf(doc=None, refresh=True)
             return
         # check if user has modified origin on map
         if self.geom and self.__original_geom != self.geom:
             self.delete_all_layers()
             self.get_geodata_from_geom(*args, **kwargs)
-            extract_dxf(self, doc=None, refresh=True)
+            self.extract_dxf(doc=None, refresh=True)
             return
         # check if user changed dxf
         if self.__original_dxf != self.dxf:
@@ -165,10 +165,10 @@ class Drawing(models.Model):
             doc = self.get_geodata_from_dxf(*args, **kwargs)
             # if successful use new geodata
             if doc:
-                extract_dxf(self, doc)
+                self.extract_dxf(doc)
             # else use old geodata
             elif self.geom:
-                extract_dxf(self, doc=None, refresh=True)
+                self.extract_dxf(doc=None, refresh=True)
             return
         # check if something else changed
         if (
@@ -177,7 +177,7 @@ class Drawing(models.Model):
             or self.__original_rotation != self.rotation
         ):
             self.delete_all_layers()
-            extract_dxf(self, doc=None, refresh=True)
+            self.extract_dxf(doc=None, refresh=True)
 
     def delete_all_layers(self):
         all_layers = self.related_layers.all()
