@@ -252,6 +252,24 @@ class Drawing(models.Model):
         # get transform matrix from true or fake geodata
         m, epsg = geodata.get_crs_transformation(no_checks=True)  # noqa
         layer_table = self.prepare_layer_table(doc)  # noqa
+        for e_type in self.entity_types:
+            self.extract_entities(msp, e_type, m, utm2world, layer_table)
+
+    def prepare_transformers(self):
+        world2utm = Transformer.from_crs(4326, self.epsg, always_xy=True)
+        utm2world = Transformer.from_crs(self.epsg, 4326, always_xy=True)
+        utm_wcs = world2utm.transform(
+            self.geom["coordinates"][0], self.geom["coordinates"][1]
+        )
+        rot = radians(self.rotation)
+        return world2utm, utm2world, utm_wcs, rot
+
+    def fake_geodata(self, geodata, utm_wcs, rot):
+        geodata.coordinate_system_definition = get_epsg_xml(self)
+        geodata.dxf.design_point = (self.designx, self.designy, 0)
+        geodata.dxf.reference_point = utm_wcs
+        geodata.dxf.north_direction = (sin(rot), cos(rot))
+        return geodata
 
     def prepare_layer_table(self, doc):
         layer_table = {}
@@ -273,21 +291,53 @@ class Drawing(models.Model):
             }
         return layer_table
 
-    def prepare_transformers(self):
-        world2utm = Transformer.from_crs(4326, self.epsg, always_xy=True)
-        utm2world = Transformer.from_crs(self.epsg, 4326, always_xy=True)
-        utm_wcs = world2utm.transform(
-            self.geom["coordinates"][0], self.geom["coordinates"][1]
-        )
-        rot = radians(self.rotation)
-        return world2utm, utm2world, utm_wcs, rot
-
-    def fake_geodata(self, geodata, utm_wcs, rot):
-        geodata.coordinate_system_definition = get_epsg_xml(self)
-        geodata.dxf.design_point = (self.designx, self.designy, 0)
-        geodata.dxf.reference_point = utm_wcs
-        geodata.dxf.north_direction = (sin(rot), cos(rot))
-        return geodata
+    def extract_entities(self, msp, e_type, m, utm2world, layer_table):
+        for e in msp.query(e_type):
+            geo_proxy = get_geo_proxy(e, m, utm2world)
+            if geo_proxy:
+                if e_type in ["LWPOLYLINE", "POLYLINE"]:
+                    entity_data = {}
+                    # check if it's a true polygon
+                    try:
+                        poly = Polygon(e.vertices_in_wcs())
+                        # look for texts in same layer
+                        for t_type in self.text_types:
+                            txts = msp.query(f"{t_type}[layer=='{e.dxf.layer}']")
+                            for t in txts:
+                                point = Point(t.dxf.insert)
+                                # check if text is contained by polygon
+                                if poly.contains(point):
+                                    # handle different type of texts
+                                    if t_type == "TEXT":
+                                        entity_data["Name"] = t.dxf.text
+                                    else:
+                                        entity_data["Name"] = t.text
+                                    break
+                        if e.is_closed:
+                            entity_data["Surface"] = round(poly.area, 2)
+                        if e.dxf.thickness:
+                            entity_data["Height"] = round(e.dxf.thickness, 2)
+                        entity_data["Perimeter"] = round(poly.length, 2)
+                        if e.dxf.const_width:
+                            entity_data["Width"] = round(e.dxf.const_width, 2)
+                        Entity.objects.create(
+                            layer=layer_table[e.dxf.layer]["layer_obj"],
+                            geom={
+                                "geometries": [geo_proxy.__geo_interface__],
+                                "type": "GeometryCollection",
+                            },
+                            data=entity_data,
+                        )
+                    except (AttributeError, ValueError):
+                        # not true polygon, add to layer entity
+                        layer_table[e.dxf.layer]["geometries"].append(
+                            geo_proxy.__geo_interface__
+                        )
+                else:
+                    # not polyline, add to layer entity
+                    layer_table[e.dxf.layer]["geometries"].append(
+                        geo_proxy.__geo_interface__
+                    )
 
     def write_csv(self, writer):
         writer_data = []
