@@ -270,11 +270,38 @@ class Drawing(models.Model):
         return world2utm, utm2world, utm_wcs, rot
 
     def fake_geodata(self, geodata, utm_wcs, rot):
-        geodata.coordinate_system_definition = get_epsg_xml(self)
+        geodata.coordinate_system_definition = self.get_epsg_xml()
         geodata.dxf.design_point = (self.designx, self.designy, 0)
         geodata.dxf.reference_point = utm_wcs
         geodata.dxf.north_direction = (sin(rot), cos(rot))
         return geodata
+
+    def get_epsg_xml(self):
+        xml = """<?xml version="1.0"
+encoding="UTF-16" standalone="no" ?>
+<Dictionary version="1.0" xmlns="http://www.osgeo.org/mapguide/coordinatesystem">
+<Alias id="%(epsg)s" type="CoordinateSystem">
+<ObjectId>EPSG=%(epsg)s</ObjectId>
+<Namespace>EPSG Code</Namespace>
+</Alias>
+<Axis uom="METER">
+<CoordinateSystemAxis>
+<AxisOrder>1</AxisOrder>
+<AxisName>Easting</AxisName>
+<AxisAbbreviation>E</AxisAbbreviation>
+<AxisDirection>east</AxisDirection>
+</CoordinateSystemAxis>
+<CoordinateSystemAxis>
+<AxisOrder>2</AxisOrder>
+<AxisName>Northing</AxisName>
+<AxisAbbreviation>N</AxisAbbreviation>
+<AxisDirection>north</AxisDirection>
+</CoordinateSystemAxis>
+</Axis>
+</Dictionary>""" % {
+            "epsg": self.epsg
+        }
+        return xml
 
     def prepare_layer_table(self, doc):
         layer_table = {}
@@ -588,31 +615,3 @@ def get_geo_proxy(entity, matrix, transformer):
     geo_proxy.wcs_to_crs(matrix)
     geo_proxy.apply(lambda v: ezdxf.math.Vec3(transformer.transform(v.x, v.y)))
     return geo_proxy
-
-
-def get_epsg_xml(drawing):
-    xml = """<?xml version="1.0"
-encoding="UTF-16" standalone="no" ?>
-<Dictionary version="1.0" xmlns="http://www.osgeo.org/mapguide/coordinatesystem">
-<Alias id="%(epsg)s" type="CoordinateSystem">
-<ObjectId>EPSG=%(epsg)s</ObjectId>
-<Namespace>EPSG Code</Namespace>
-</Alias>
-<Axis uom="METER">
-<CoordinateSystemAxis>
-<AxisOrder>1</AxisOrder>
-<AxisName>Easting</AxisName>
-<AxisAbbreviation>E</AxisAbbreviation>
-<AxisDirection>east</AxisDirection>
-</CoordinateSystemAxis>
-<CoordinateSystemAxis>
-<AxisOrder>2</AxisOrder>
-<AxisName>Northing</AxisName>
-<AxisAbbreviation>N</AxisAbbreviation>
-<AxisDirection>north</AxisDirection>
-</CoordinateSystemAxis>
-</Axis>
-</Dictionary>""" % {
-        "epsg": drawing.epsg
-    }
-    return xml
