@@ -101,6 +101,12 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(draw.epsg, 32633)
         self.assertIsNone(draw.parent)
 
+    def test_delete_all_layers(self):
+        draw = Drawing.objects.get(title="Referenced")
+        self.assertTrue(draw.related_layers.all().exists())
+        draw.delete_all_layers()
+        self.assertFalse(draw.related_layers.all().exists())
+
     def test_get_geodata_from_parent(self):
         draw = Drawing.objects.get(title="Not referenced")
         parent = Drawing.objects.get(title="Referenced")
