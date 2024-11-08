@@ -348,16 +348,24 @@ class GeoCADModelTest(TestCase):
             {
                 "title": notref.title,
                 "parent": yesref.id,
-                "dxf": notref.dxf.name,
+                "dxf": "",
                 "image": "",
                 "geom": "",
                 "designx": 0,
                 "designy": 0,
                 "rotation": 0,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
             },
-            follow=True,
+            # follow=True,
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def test_drawing_add_geom_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
@@ -367,16 +375,24 @@ class GeoCADModelTest(TestCase):
             {
                 "title": notref.title,
                 "parent": "",
-                "dxf": notref.dxf.name,
+                "dxf": "",
                 "image": "",
                 "geom": {"type": "Point", "coordinates": [12.0, 42.0]},
                 "designx": 0,
                 "designy": 0,
                 "rotation": 0,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
             },
-            follow=True,
+            # follow=True,
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def test_drawing_change_dxf_in_admin(self):
         dxf_path = Path(settings.BASE_DIR).joinpath(
@@ -397,10 +413,18 @@ class GeoCADModelTest(TestCase):
                 "designx": 0,
                 "designy": 0,
                 "rotation": 0,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
             },
-            follow=True,
+            # follow=True,
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def test_drawing_change_other_stuff_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
@@ -410,16 +434,24 @@ class GeoCADModelTest(TestCase):
             {
                 "title": notref.title,
                 "parent": "",
-                "dxf": notref.dxf.name,
+                "dxf": "",
                 "image": "",
                 "geom": "",
                 "designx": 10,
                 "designy": 10,
                 "rotation": 30,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
             },
-            follow=True,
+            # follow=True,
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def test_drawing_get_geodata_from_dxf_false(self):
         # we want to make sure that nogeo.dxf has not been polluted
