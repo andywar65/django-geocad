@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import ezdxf
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -152,6 +153,21 @@ class GeoCADModelTest(TestCase):
         self.assertAlmostEqual(utm_wcs[0], 291187.7155651262)
         self.assertAlmostEqual(utm_wcs[1], 4640994.318375054)
         self.assertEqual(rot, 0)
+
+    def test_fake_geodata(self):
+        draw = Drawing.objects.get(title="Not referenced")
+        draw.epsg = 32633
+        draw.geom = {"type": "Point", "coordinates": [12.0, 42.0]}
+        doc = ezdxf.readfile(draw.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.new_geodata()
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        geodata = draw.fake_geodata(geodata, utm_wcs, rot)
+        self.assertIsInstance(geodata, ezdxf.entities.geodata.GeoData)
+        self.assertEqual(geodata.dxf.design_point, (0, 0, 0))
+        self.assertAlmostEqual(geodata.dxf.reference_point[0], 251535.07928761785)
+        self.assertAlmostEqual(geodata.dxf.reference_point[1], 4654130.8913233075)
+        self.assertEqual(geodata.dxf.north_direction[1], 1)
 
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")
