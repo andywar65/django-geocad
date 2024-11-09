@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from pyproj import Transformer
 
 from .models import Drawing, Entity, Layer, cad2hex
 
@@ -138,6 +139,19 @@ class GeoCADModelTest(TestCase):
         draw = Drawing.objects.get(title="Referenced")
         doc = draw.get_geodata_from_dxf()
         self.assertIsNotNone(doc)
+
+    def test_prepare_transformers(self):
+        draw = Drawing.objects.get(title="Referenced")
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        self.assertEqual(
+            world2utm, Transformer.from_crs(4326, draw.epsg, always_xy=True)
+        )
+        self.assertEqual(
+            utm2world, Transformer.from_crs(draw.epsg, 4326, always_xy=True)
+        )
+        self.assertAlmostEqual(utm_wcs[0], 291187.7155651262)
+        self.assertAlmostEqual(utm_wcs[1], 4640994.318375054)
+        self.assertEqual(rot, 0)
 
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")
@@ -395,6 +409,7 @@ class GeoCADModelTest(TestCase):
                 "related_layers-__prefix__-name": "",
                 "related_layers-__prefix__-color_field": "#FFFFFF",
                 "related_layers-__prefix__-linetype": "on",
+                "_save": "Save",
             },
             # follow=True,
         )
