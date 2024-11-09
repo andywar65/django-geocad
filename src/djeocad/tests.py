@@ -169,6 +169,12 @@ class GeoCADModelTest(TestCase):
         self.assertAlmostEqual(geodata.dxf.reference_point[1], 4654130.8913233075)
         self.assertEqual(geodata.dxf.north_direction[1], 1)
 
+    def test_get_epsg_xml(self):
+        draw = Drawing.objects.get(title="Referenced")
+        xml = draw.get_epsg_xml()
+        self.assertIn(f'<Alias id="{draw.epsg}" type="CoordinateSystem">', xml)
+        self.assertIn(f"<ObjectId>EPSG={draw.epsg}</ObjectId>", xml)
+
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")
         popup = {
