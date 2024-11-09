@@ -216,6 +216,19 @@ class GeoCADModelTest(TestCase):
         ent = Entity.objects.last()
         self.assertEqual(ent.layer.name, "rgb")
 
+    def test_save_blocks(self):
+        draw = Drawing.objects.get(title="Referenced")
+        doc = ezdxf.readfile(draw.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        lay = Layer.objects.last()
+        self.assertEqual(lay.name, "Layer")
+        draw.save_blocks(doc, m, utm2world)
+        lay = Layer.objects.last()
+        self.assertTrue(lay.is_block)
+
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")
         popup = {
