@@ -54,6 +54,7 @@ class GeoCADModelTest(TestCase):
                     }
                 ],
             },
+            insertion={"type": "Point", "coordinates": [12.523826, 41.90339]},
         )
 
     @classmethod
@@ -223,11 +224,20 @@ class GeoCADModelTest(TestCase):
         geodata = msp.get_geodata()
         m, epsg = geodata.get_crs_transformation(no_checks=True)
         world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
-        lay = Layer.objects.last()
-        self.assertEqual(lay.name, "Layer")
         draw.save_blocks(doc, m, utm2world)
         lay = Layer.objects.last()
         self.assertTrue(lay.is_block)
+
+    def test_extract_insertions(self):
+        draw = Drawing.objects.get(title="Referenced")
+        doc = ezdxf.readfile(draw.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        layer_table = draw.prepare_layer_table(doc)
+        ins = msp.query("INSERT")[0]
+        draw.extract_insertions(ins, msp, m, utm2world, layer_table)
 
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")
