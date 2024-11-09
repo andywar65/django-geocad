@@ -175,6 +175,16 @@ class GeoCADModelTest(TestCase):
         self.assertIn(f'<Alias id="{draw.epsg}" type="CoordinateSystem">', xml)
         self.assertIn(f"<ObjectId>EPSG={draw.epsg}</ObjectId>", xml)
 
+    def test_prepare_layer_table(self):
+        draw = Drawing.objects.get(title="Not referenced")
+        doc = ezdxf.readfile(draw.dxf.path)
+        layer_table = draw.prepare_layer_table(doc)
+        self.assertEqual(len(layer_table), 2)
+        self.assertEqual(layer_table["0"]["geometries"], [])
+        self.assertEqual(layer_table["one"]["layer_obj"].drawing_id, draw.id)
+        self.assertEqual(layer_table["one"]["layer_obj"].name, "one")
+        self.assertEqual(layer_table["one"]["layer_obj"].color_field, "#FF0000")
+
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")
         popup = {
