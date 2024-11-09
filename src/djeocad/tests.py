@@ -185,6 +185,37 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(layer_table["one"]["layer_obj"].name, "one")
         self.assertEqual(layer_table["one"]["layer_obj"].color_field, "#FF0000")
 
+    def test_extract_entities(self):
+        draw = Drawing.objects.get(title="Referenced")
+        doc = ezdxf.readfile(draw.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        layer_table = draw.prepare_layer_table(doc)
+        ent = Entity.objects.last()
+        self.assertIsNone(ent.data)
+        e_type = "LWPOLYLINE"
+        draw.extract_entities(msp, e_type, m, utm2world, layer_table)
+        ent = Entity.objects.last()
+        self.assertTrue(ent.data["Name"] in ["A", "Room"])
+
+    def test_create_layer_entities(self):
+        draw = Drawing.objects.get(title="Referenced")
+        doc = ezdxf.readfile(draw.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        layer_table = draw.prepare_layer_table(doc)
+        ent = Entity.objects.last()
+        self.assertEqual(ent.layer.name, "Layer")
+        e_type = "LINE"
+        draw.extract_entities(msp, e_type, m, utm2world, layer_table)
+        draw.create_layer_entities(layer_table)
+        ent = Entity.objects.last()
+        self.assertEqual(ent.layer.name, "rgb")
+
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")
         popup = {
