@@ -1,10 +1,12 @@
 from pathlib import Path
 
+import ezdxf
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from pyproj import Transformer
 
 from .models import Drawing, Entity, Layer, cad2hex
 
@@ -52,6 +54,7 @@ class GeoCADModelTest(TestCase):
                     }
                 ],
             },
+            insertion={"type": "Point", "coordinates": [12.523826, 41.90339]},
         )
 
     @classmethod
@@ -101,6 +104,12 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(draw.epsg, 32633)
         self.assertIsNone(draw.parent)
 
+    def test_delete_all_layers(self):
+        draw = Drawing.objects.get(title="Referenced")
+        self.assertTrue(draw.related_layers.all().exists())
+        draw.delete_all_layers()
+        self.assertFalse(draw.related_layers.all().exists())
+
     def test_get_geodata_from_parent(self):
         draw = Drawing.objects.get(title="Not referenced")
         parent = Drawing.objects.get(title="Referenced")
@@ -132,6 +141,103 @@ class GeoCADModelTest(TestCase):
         draw = Drawing.objects.get(title="Referenced")
         doc = draw.get_geodata_from_dxf()
         self.assertIsNotNone(doc)
+
+    def test_prepare_transformers(self):
+        draw = Drawing.objects.get(title="Referenced")
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        self.assertEqual(
+            world2utm, Transformer.from_crs(4326, draw.epsg, always_xy=True)
+        )
+        self.assertEqual(
+            utm2world, Transformer.from_crs(draw.epsg, 4326, always_xy=True)
+        )
+        self.assertAlmostEqual(utm_wcs[0], 291187.7155651262)
+        self.assertAlmostEqual(utm_wcs[1], 4640994.318375054)
+        self.assertEqual(rot, 0)
+
+    def test_fake_geodata(self):
+        draw = Drawing.objects.get(title="Not referenced")
+        draw.epsg = 32633
+        draw.geom = {"type": "Point", "coordinates": [12.0, 42.0]}
+        doc = ezdxf.readfile(draw.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.new_geodata()
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        geodata = draw.fake_geodata(geodata, utm_wcs, rot)
+        self.assertIsInstance(geodata, ezdxf.entities.geodata.GeoData)
+        self.assertEqual(geodata.dxf.design_point, (0, 0, 0))
+        self.assertAlmostEqual(geodata.dxf.reference_point[0], 251535.07928761785)
+        self.assertAlmostEqual(geodata.dxf.reference_point[1], 4654130.8913233075)
+        self.assertEqual(geodata.dxf.north_direction[1], 1)
+
+    def test_get_epsg_xml(self):
+        draw = Drawing.objects.get(title="Referenced")
+        xml = draw.get_epsg_xml()
+        self.assertIn(f'<Alias id="{draw.epsg}" type="CoordinateSystem">', xml)
+        self.assertIn(f"<ObjectId>EPSG={draw.epsg}</ObjectId>", xml)
+
+    def test_prepare_layer_table(self):
+        draw = Drawing.objects.get(title="Not referenced")
+        doc = ezdxf.readfile(draw.dxf.path)
+        layer_table = draw.prepare_layer_table(doc)
+        self.assertEqual(len(layer_table), 2)
+        self.assertEqual(layer_table["0"]["geometries"], [])
+        self.assertEqual(layer_table["one"]["layer_obj"].drawing_id, draw.id)
+        self.assertEqual(layer_table["one"]["layer_obj"].name, "one")
+        self.assertEqual(layer_table["one"]["layer_obj"].color_field, "#FF0000")
+
+    def test_extract_entities(self):
+        draw = Drawing.objects.get(title="Referenced")
+        doc = ezdxf.readfile(draw.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        layer_table = draw.prepare_layer_table(doc)
+        ent = Entity.objects.last()
+        self.assertIsNone(ent.data)
+        e_type = "LWPOLYLINE"
+        draw.extract_entities(msp, e_type, m, utm2world, layer_table)
+        ent = Entity.objects.last()
+        self.assertTrue(ent.data["Name"] in ["A", "Room"])
+
+    def test_create_layer_entities(self):
+        draw = Drawing.objects.get(title="Referenced")
+        doc = ezdxf.readfile(draw.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        layer_table = draw.prepare_layer_table(doc)
+        ent = Entity.objects.last()
+        self.assertEqual(ent.layer.name, "Layer")
+        e_type = "LINE"
+        draw.extract_entities(msp, e_type, m, utm2world, layer_table)
+        draw.create_layer_entities(layer_table)
+        ent = Entity.objects.last()
+        self.assertEqual(ent.layer.name, "rgb")
+
+    def test_save_blocks(self):
+        draw = Drawing.objects.get(title="Referenced")
+        doc = ezdxf.readfile(draw.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        draw.save_blocks(doc, m, utm2world)
+        lay = Layer.objects.last()
+        self.assertTrue(lay.is_block)
+
+    def test_extract_insertions(self):
+        draw = Drawing.objects.get(title="Referenced")
+        doc = ezdxf.readfile(draw.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
+        world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        layer_table = draw.prepare_layer_table(doc)
+        ins = msp.query("INSERT")[0]
+        draw.extract_insertions(ins, msp, m, utm2world, layer_table)
 
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")
@@ -348,16 +454,24 @@ class GeoCADModelTest(TestCase):
             {
                 "title": notref.title,
                 "parent": yesref.id,
-                "dxf": notref.dxf.name,
+                "dxf": "",
                 "image": "",
                 "geom": "",
                 "designx": 0,
                 "designy": 0,
                 "rotation": 0,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
             },
-            follow=True,
+            # follow=True,
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def test_drawing_add_geom_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
@@ -367,16 +481,25 @@ class GeoCADModelTest(TestCase):
             {
                 "title": notref.title,
                 "parent": "",
-                "dxf": notref.dxf.name,
+                "dxf": "",
                 "image": "",
                 "geom": {"type": "Point", "coordinates": [12.0, 42.0]},
                 "designx": 0,
                 "designy": 0,
                 "rotation": 0,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
+                "_save": "Save",
             },
-            follow=True,
+            # follow=True,
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def test_drawing_change_dxf_in_admin(self):
         dxf_path = Path(settings.BASE_DIR).joinpath(
@@ -397,10 +520,18 @@ class GeoCADModelTest(TestCase):
                 "designx": 0,
                 "designy": 0,
                 "rotation": 0,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
             },
-            follow=True,
+            # follow=True,
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def test_drawing_change_other_stuff_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
@@ -410,16 +541,24 @@ class GeoCADModelTest(TestCase):
             {
                 "title": notref.title,
                 "parent": "",
-                "dxf": notref.dxf.name,
+                "dxf": "",
                 "image": "",
                 "geom": "",
                 "designx": 10,
                 "designy": 10,
                 "rotation": 30,
+                "related_layers-TOTAL_FORMS": 0,
+                "related_layers-MIN_NUM_FORMS": 0,
+                "related_layers-MAX_NUM_FORMS": 1000,
+                "related_layers-__prefix__-id": "",
+                "related_layers-__prefix__-drawing": notref.id,
+                "related_layers-__prefix__-name": "",
+                "related_layers-__prefix__-color_field": "#FFFFFF",
+                "related_layers-__prefix__-linetype": "on",
             },
-            follow=True,
+            # follow=True,
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
     def test_drawing_get_geodata_from_dxf_false(self):
         # we want to make sure that nogeo.dxf has not been polluted
