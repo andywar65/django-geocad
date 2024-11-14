@@ -559,6 +559,12 @@ class Entity(models.Model):
         null=True,
     )
     geom = GeometryCollectionField()
+    block = models.ForeignKey(
+        Layer,
+        on_delete=models.CASCADE,
+        related_name="related_insertions",
+        null=True,
+    )
     insertion = PointField(
         null=True,
     )
@@ -593,6 +599,27 @@ class Entity(models.Model):
             "linetype": self.layer.linetype,
             "layer": _("Layer - ") + nh3.clean(self.layer.name),
         }
+
+
+class EntityData(models.Model):
+
+    entity = models.ForeignKey(
+        Entity,
+        on_delete=models.CASCADE,
+        related_name="related_data",
+    )
+    key = models.CharField(
+        _("Data key"),
+        max_length=50,
+    )
+    value = models.CharField(
+        _("Data value"),
+        max_length=100,
+    )
+
+    class Meta:
+        verbose_name = _("Entity Data")
+        verbose_name_plural = _("Entity Data")
 
 
 """
