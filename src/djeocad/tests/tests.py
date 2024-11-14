@@ -9,7 +9,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from pyproj import Transformer
 
-from .models import Drawing, Entity, Layer, cad2hex
+from djeocad.models import Drawing, Entity, Layer, cad2hex
 
 
 @override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT).joinpath("tests"))
