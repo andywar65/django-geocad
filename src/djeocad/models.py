@@ -568,6 +568,18 @@ class Entity(models.Model):
     insertion = PointField(
         null=True,
     )
+    xscale = models.FloatField(
+        _("X scale"),
+        default=1,
+    )
+    yscale = models.FloatField(
+        _("Y scale"),
+        default=1,
+    )
+    rotation = models.FloatField(
+        _("Rotation"),
+        default=0,
+    )
 
     class Meta:
         verbose_name = _("Entity")
