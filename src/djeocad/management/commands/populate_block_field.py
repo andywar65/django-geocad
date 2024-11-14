@@ -1,7 +1,8 @@
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 
-from djeocad.models import Entity, EntityData
+from djeocad.models import Entity, EntityData, Layer
 
 
 class Command(BaseCommand):
@@ -31,7 +32,29 @@ def populate_fields():
             if "processed" in ent.data:
                 continue
             elif "Block" in ent.data:
-                continue
+                try:
+                    block = Layer.objects.get(
+                        name=ent.data["Block"], drawing=ent.layer.drawing
+                    )
+                    ent.block = block
+                    if "X scale" in ent.data:
+                        ent.xscale = ent.data["X scale"]
+                    if "Y scale" in ent.data:
+                        ent.yscale = ent.data["Y scale"]
+                    if "Rotation" in ent.data:
+                        ent.rotation = ent.data["Rotation"]
+                    ent.data["processed"] = "true"
+                    ent.save()
+                    if "attributes" in ent.data:
+                        for key, value in ent.data["attributes"].items():
+                            EntityData.objects.create(
+                                entity=ent,
+                                key=key,
+                                value=value,
+                            )
+                    continue
+                except ObjectDoesNotExist:
+                    continue
             for key, value in ent.data.items():
                 EntityData.objects.create(
                     entity=ent,
