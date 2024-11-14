@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
+from djeocad.models import Entity, EntityData
+
 
 class Command(BaseCommand):
     help = """
@@ -24,4 +26,19 @@ class Command(BaseCommand):
 
 
 def populate_fields():
-    pass
+    for ent in Entity.objects.all():
+        if ent.data:
+            if "processed" in ent.data:
+                continue
+            elif "Block" in ent.data:
+                continue
+            for key, value in ent.data.items():
+                EntityData.objects.create(
+                    entity=ent,
+                    key=key,
+                    value=value,
+                )
+        else:
+            ent.data = {}
+        ent.data["processed"] = "true"
+        ent.save()
