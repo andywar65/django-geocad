@@ -352,14 +352,20 @@ encoding="UTF-16" standalone="no" ?>
                         entity_data["Perimeter"] = round(poly.length, 2)
                         if e.dxf.const_width:
                             entity_data["Width"] = round(e.dxf.const_width, 2)
-                        Entity.objects.create(
+                        ent = Entity.objects.create(
                             layer=layer_table[e.dxf.layer]["layer_obj"],
                             geom={
                                 "geometries": [geo_proxy.__geo_interface__],
                                 "type": "GeometryCollection",
                             },
-                            data=entity_data,
+                            # data=entity_data,
                         )
+                        for key, value in entity_data.items():
+                            EntityData.objects.create(
+                                entity=ent,
+                                key=key,
+                                value=value,
+                            )
                     except (AttributeError, ValueError):
                         # not true polygon, add to layer entity
                         layer_table[e.dxf.layer]["geometries"].append(
@@ -593,18 +599,17 @@ class Entity(models.Model):
             ltype = _("Layer")
         title_str = f"<p>{ltype}: {nh3.clean(self.layer.name)}</p>"
         data = ""
-        if self.data:
+        ent_data = self.related_data.all()
+        if ent_data.exists():
             data = f"<ul><li>ID = {self.id}</li>"
-            for k, v in self.data.items():
-                if k == "attributes":
-                    continue
-                data += f"<li>{k} = {nh3.clean(str(v))}</li>"
-            data += "</ul>"
-            if "attributes" in self.data:
+            if self.layer.is_block:
                 data += "<p>Attributes</p><ul>"
-                for k, v in self.data["attributes"].items():
-                    data += f"<li>{nh3.clean(str(k))} = {nh3.clean(str(v))}</li>"
-                data += "</ul>"
+                for ed in ent_data:
+                    data += f"<li>{nh3.clean(ed.key)} = {nh3.clean(ed.value)}</li>"
+            else:
+                for ed in ent_data:
+                    data += f"<li>{nh3.clean(ed.key)} = {nh3.clean(ed.value)}</li>"
+            data += "</ul>"
         return {
             "content": title_str + data,
             "color": self.layer.color_field,
