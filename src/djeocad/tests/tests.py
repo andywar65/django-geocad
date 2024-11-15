@@ -200,7 +200,10 @@ class GeoCADModelTest(TestCase):
         e_type = "LWPOLYLINE"
         draw.extract_entities(msp, e_type, m, utm2world, layer_table)
         ent = Entity.objects.last()
-        self.assertTrue(ent.data["Name"] in ["A", "Room"])
+        ent_data = ent.related_data.all()
+        for ed in ent_data:
+            if ed.key == "Name":
+                self.assertTrue(ed.value in ["A", "Room"])
 
     def test_create_layer_entities(self):
         draw = Drawing.objects.get(title="Referenced")
