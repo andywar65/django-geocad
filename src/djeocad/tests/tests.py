@@ -9,7 +9,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from pyproj import Transformer
 
-from djeocad.models import Drawing, Entity, Layer, cad2hex
+from djeocad.models import Drawing, Entity, EntityData, Layer, cad2hex
 
 
 @override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT).joinpath("tests"))
@@ -348,22 +348,25 @@ class GeoCADModelTest(TestCase):
     def test_room_entity_popup(self):
         draw = Drawing.objects.get(title="Referenced")
         one = Layer.objects.get(drawing=draw, name="one")
-        ent = Entity.objects.get(layer=one, data__Name="Room")
+        ent_list = Entity.objects.filter(layer=one).values_list("id", flat=True)
+        ent_data = EntityData.objects.get(value="Room", entity_id__in=ent_list)
+        ent = Entity.objects.get(id=ent_data.entity.id)
         self.assertEqual(ent.popupContent["color"], one.color_field)
         self.assertEqual(ent.popupContent["layer"], f"Layer - {one.name}")
         self.assertIn(f"<p>Layer: {one.name}</p>", ent.popupContent["content"])
         self.assertIn(f"<li>ID = {ent.id}</li>", ent.popupContent["content"])
+        self.assertIn(f"<li>Name = {ent_data.value}</li>", ent.popupContent["content"])
+        ent_data = EntityData.objects.get(key="Surface", entity=ent)
         self.assertIn(
-            f"<li>Name = {ent.data['Name']}</li>", ent.popupContent["content"]
+            f"<li>Surface = {ent_data.value}</li>", ent.popupContent["content"]
         )
+        ent_data = EntityData.objects.get(key="Height", entity=ent)
         self.assertIn(
-            f"<li>Surface = {ent.data['Surface']}</li>", ent.popupContent["content"]
+            f"<li>Height = {ent_data.value}</li>", ent.popupContent["content"]
         )
+        ent_data = EntityData.objects.get(key="Perimeter", entity=ent)
         self.assertIn(
-            f"<li>Height = {ent.data['Height']}</li>", ent.popupContent["content"]
-        )
-        self.assertIn(
-            f"<li>Perimeter = {ent.data['Perimeter']}</li>", ent.popupContent["content"]
+            f"<li>Perimeter = {ent_data.value}</li>", ent.popupContent["content"]
         )
 
     def test_cad2hex_tuple(self):
