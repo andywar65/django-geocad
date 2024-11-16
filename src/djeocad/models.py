@@ -554,6 +554,10 @@ class Layer(models.Model):
         ordering = ("name",)
 
 
+def get_default_entity_data():
+    return {"processed": "true"}
+
+
 class Entity(models.Model):
 
     layer = models.ForeignKey(
@@ -562,7 +566,7 @@ class Entity(models.Model):
         related_name="related_entities",
     )
     data = models.JSONField(
-        null=True,
+        default=get_default_entity_data,
     )
     geom = GeometryCollectionField()
     block = models.ForeignKey(
