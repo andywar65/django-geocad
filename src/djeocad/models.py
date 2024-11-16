@@ -603,7 +603,7 @@ class Entity(models.Model):
         if ent_data.exists():
             data = f"<ul><li>ID = {self.id}</li>"
             if self.layer.is_block:
-                data += "<p>Attributes</p><ul>"
+                data += "</ul><p>Attributes</p><ul>"
                 for ed in ent_data:
                     data += f"<li>{nh3.clean(ed.key)} = {nh3.clean(ed.value)}</li>"
             else:
