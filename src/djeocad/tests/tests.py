@@ -196,7 +196,7 @@ class GeoCADModelTest(TestCase):
         world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
         layer_table = draw.prepare_layer_table(doc)
         ent = Entity.objects.last()
-        self.assertIsNone(ent.data)
+        self.assertTrue("processed" in ent.data)
         e_type = "LWPOLYLINE"
         draw.extract_entities(msp, e_type, m, utm2world, layer_table)
         ent = Entity.objects.last()
