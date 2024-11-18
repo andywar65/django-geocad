@@ -16,23 +16,17 @@ from djeocad.models import Drawing, Entity, EntityData, Layer, cad2hex
 class GeoCADModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/nogeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/nogeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
         draw1 = Drawing()
         draw1.title = "Not referenced"
         draw1.dxf = SimpleUploadedFile("nogeo.dxf", content, "image/x-dxf")
         draw1.save()
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/yesgeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/yesgeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
-        img_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/image.jpg"
-        )
+        img_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/image.jpg")
         with open(img_path, "rb") as fi:
             img_content = fi.read()
         draw2 = Drawing()
@@ -118,9 +112,7 @@ class GeoCADModelTest(TestCase):
     def test_drawing_change_dxf_no_geodata(self):
         # for coverage purposes, but not covering!
         draw = Drawing.objects.get(title="Referenced")
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/nogeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/nogeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
         draw.dxf = SimpleUploadedFile("nogeo.dxf", content, "image/x-dxf")
@@ -130,9 +122,7 @@ class GeoCADModelTest(TestCase):
     def test_drawing_change_dxf_with_geodata(self):
         # for coverage purposes, but not covering!
         draw = Drawing.objects.get(title="Referenced")
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/yesgeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/yesgeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
         draw.dxf = SimpleUploadedFile("yesgeo.dxf", content, "image/x-dxf")
@@ -571,9 +561,7 @@ class GeoCADModelTest(TestCase):
 
     @skip("problems with admin views")
     def test_drawing_change_dxf_in_admin(self):
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/yesgeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/yesgeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
         self.client.login(username="boss", password="p4s5w0r6")
@@ -632,9 +620,7 @@ class GeoCADModelTest(TestCase):
 
     def test_drawing_get_geodata_from_dxf_false(self):
         # we want to make sure that nogeo.dxf has not been polluted
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/nogeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/nogeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
         draw = Drawing.objects.get(title="Not referenced")
