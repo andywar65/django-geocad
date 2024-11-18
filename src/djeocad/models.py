@@ -479,8 +479,6 @@ encoding="UTF-16" standalone="no" ?>
                     "id": e.id,
                     "layer": layer.name,
                 }
-                for ed in e.related_data.all():
-                    entity_data[ed.key] = ed.value
                 if e.insertion:
                     entity_data["Latitude"] = e.insertion["coordinates"][0]
                     entity_data["Longitude"] = e.insertion["coordinates"][1]
@@ -488,6 +486,12 @@ encoding="UTF-16" standalone="no" ?>
                     entity_data["X scale"] = e.xscale
                     entity_data["Y scale"] = e.yscale
                     entity_data["Rotation"] = e.rotation
+                    for ed in e.related_data.all():
+                        entity_data["attributes"] = {}
+                        entity_data["attributes"][ed.key] = ed.value
+                else:
+                    for ed in e.related_data.all():
+                        entity_data[ed.key] = ed.value
                 writer_data.append(entity_data)
         writer.writerow(
             [
@@ -513,21 +517,6 @@ encoding="UTF-16" standalone="no" ?>
             "Perimeter",
             "Height",
             "Width",
-        ]
-        exclude_list = [
-            "id",
-            "layer",
-            "Block",
-            "Name",
-            "Surface",
-            "Perimeter",
-            "Height",
-            "Width",
-            "Rotation",
-            "X scale",
-            "Y scale",
-            "Latitude",
-            "Longitude",
         ]
         for wd in writer_data:
             row = []
@@ -562,11 +551,10 @@ encoding="UTF-16" standalone="no" ?>
                 row.append(wd["Longitude"])
             else:
                 row.append("")
-            for key, value in wd.items():
-                if key in exclude_list:
-                    continue
-                row.append(key)
-                row.append(value)
+            if "attributes" in wd:
+                for key, value in wd["attributes"].items():
+                    row.append(key)
+                    row.append(value)
             writer.writerow(row)
         return writer
 
