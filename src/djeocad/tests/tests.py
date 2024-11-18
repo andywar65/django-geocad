@@ -105,6 +105,48 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(draw.epsg, 32633)
         self.assertIsNone(draw.parent)
 
+    def test_drawing_epsg_none_set_new_parent(self):
+        # for coverage purposes, but not covering!
+        draw = Drawing.objects.get(title="Not referenced")
+        parent = Drawing.objects.get(title="Referenced")
+        draw.parent = parent
+        draw.save()
+        self.assertIsNone(draw.parent)
+        draw.parent = parent
+        draw.save()
+        self.assertIsNone(draw.parent)
+
+    def test_drawing_change_dxf_no_geodata(self):
+        # for coverage purposes, but not covering!
+        draw = Drawing.objects.get(title="Referenced")
+        dxf_path = Path(settings.BASE_DIR).joinpath(
+            "djeocad/static/djeocad/tests/nogeo.dxf"
+        )
+        with open(dxf_path, "rb") as f:
+            content = f.read()
+        draw.dxf = SimpleUploadedFile("nogeo.dxf", content, "image/x-dxf")
+        draw.save()
+        self.assertIsNone(draw.epsg)
+
+    def test_drawing_change_dxf_with_geodata(self):
+        # for coverage purposes, but not covering!
+        draw = Drawing.objects.get(title="Referenced")
+        dxf_path = Path(settings.BASE_DIR).joinpath(
+            "djeocad/static/djeocad/tests/yesgeo.dxf"
+        )
+        with open(dxf_path, "rb") as f:
+            content = f.read()
+        draw.dxf = SimpleUploadedFile("yesgeo.dxf", content, "image/x-dxf")
+        draw.save()
+        self.assertEqual(draw.epsg, 32633)
+
+    def test_drawing_change_design_point(self):
+        # for coverage purposes, but not covering!
+        draw = Drawing.objects.get(title="Referenced")
+        draw.designx = 1
+        draw.save()
+        self.assertEqual(draw.epsg, 32633)
+
     def test_delete_all_layers(self):
         draw = Drawing.objects.get(title="Referenced")
         self.assertTrue(draw.related_layers.all().exists())
@@ -221,7 +263,6 @@ class GeoCADModelTest(TestCase):
         ent = Entity.objects.last()
         self.assertEqual(ent.layer.name, "rgb")
 
-    # @skip("cross test pollution?")
     def test_save_blocks(self):
         draw = Drawing.objects.get(title="Referenced")
         doc = ezdxf.readfile(draw.dxf.path)
