@@ -255,10 +255,10 @@ class Drawing(models.Model):
         for e_type in self.entity_types:
             self.extract_entities(msp, e_type, m, utm2world, layer_table)
         self.create_layer_entities(layer_table)
-        self.save_blocks(doc, m, utm2world)
+        block_table = self.save_blocks(doc, m, utm2world)
         # extract insertions
         for ins in msp.query("INSERT"):
-            self.extract_insertions(ins, msp, m, utm2world, layer_table)
+            self.extract_insertions(ins, msp, m, utm2world, layer_table, block_table)
 
     def prepare_transformers(self):
         world2utm = Transformer.from_crs(4326, self.epsg, always_xy=True)
@@ -352,14 +352,20 @@ encoding="UTF-16" standalone="no" ?>
                         entity_data["Perimeter"] = round(poly.length, 2)
                         if e.dxf.const_width:
                             entity_data["Width"] = round(e.dxf.const_width, 2)
-                        Entity.objects.create(
+                        ent = Entity.objects.create(
                             layer=layer_table[e.dxf.layer]["layer_obj"],
                             geom={
                                 "geometries": [geo_proxy.__geo_interface__],
                                 "type": "GeometryCollection",
                             },
-                            data=entity_data,
+                            # data=entity_data,
                         )
+                        for key, value in entity_data.items():
+                            EntityData.objects.create(
+                                entity=ent,
+                                key=key,
+                                value=value,
+                            )
                     except (AttributeError, ValueError):
                         # not true polygon, add to layer entity
                         layer_table[e.dxf.layer]["geometries"].append(
@@ -385,6 +391,7 @@ encoding="UTF-16" standalone="no" ?>
             )
 
     def save_blocks(self, doc, m, utm2world):
+        block_table = {}
         for block in doc.blocks:
             if block.name in self.name_blacklist:
                 continue
@@ -397,7 +404,7 @@ encoding="UTF-16" standalone="no" ?>
                         geometries.append(geo_proxy.__geo_interface__)
             # create block as Layer
             if not geometries == []:
-                Layer.objects.create(
+                block_obj = Layer.objects.create(
                     drawing_id=self.id,
                     name=block.name,
                     geom={
@@ -406,8 +413,10 @@ encoding="UTF-16" standalone="no" ?>
                     },
                     is_block=True,
                 )
+                block_table[block.name] = block_obj
+        return block_table
 
-    def extract_insertions(self, ins, msp, m, utm2world, layer_table):
+    def extract_insertions(self, ins, msp, m, utm2world, layer_table, block_table):
         # filter blacklisted blocks
         if ins.dxf.name in self.name_blacklist:
             return
@@ -424,44 +433,65 @@ encoding="UTF-16" standalone="no" ?>
                 if geo_proxy:
                     geometries.append(geo_proxy.__geo_interface__)
         # prepare block data
-        data_ins = {}
-        data_ins["Block"] = ins.dxf.name
         if ins.dxf.rotation:
-            data_ins["Rotation"] = round(ins.dxf.rotation, 2)
+            rotation = round(ins.dxf.rotation, 2)
+        else:
+            rotation = 0
         if ins.dxf.xscale:
-            data_ins["X scale"] = round(ins.dxf.xscale, 2)
+            xscale = round(ins.dxf.xscale, 2)
+        else:
+            xscale = 1
         if ins.dxf.yscale:
-            data_ins["Y scale"] = round(ins.dxf.yscale, 2)
-        if ins.attribs:
-            attrib_dict = {}
-            for attr in ins.attribs:
-                attrib_dict[attr.dxf.tag] = attr.dxf.text
-            data_ins["attributes"] = attrib_dict
+            yscale = round(ins.dxf.yscale, 2)
+        else:
+            yscale = 1
         # create Insertion
-        Entity.objects.create(
-            data=data_ins,
+        ins_obj = Entity.objects.create(
             layer=layer_table[ins.dxf.layer]["layer_obj"],
+            block=block_table[ins.dxf.name],
             insertion=insertion_point,
             geom={
                 "geometries": geometries,
                 "type": "GeometryCollection",
             },
+            rotation=rotation,
+            xscale=xscale,
+            yscale=yscale,
         )
+        # add attributes
+        if ins.attribs:
+            for attr in ins.attribs:
+                EntityData.objects.create(
+                    entity=ins_obj,
+                    key=attr.dxf.tag,
+                    value=attr.dxf.text,
+                )
 
     def write_csv(self, writer):
         writer_data = []
         layers = self.related_layers.all()
         for layer in layers:
-            entities = layer.related_entities.exclude(data=None)
+            entities = layer.related_entities.all()
             for e in entities:
+                if not e.related_data:
+                    continue
                 entity_data = {
                     "id": e.id,
                     "layer": layer.name,
-                    "data": e.data,
                 }
                 if e.insertion:
                     entity_data["Latitude"] = e.insertion["coordinates"][0]
                     entity_data["Longitude"] = e.insertion["coordinates"][1]
+                    entity_data["Block"] = e.block.name
+                    entity_data["X scale"] = e.xscale
+                    entity_data["Y scale"] = e.yscale
+                    entity_data["Rotation"] = e.rotation
+                    for ed in e.related_data.all():
+                        entity_data["attributes"] = {}
+                        entity_data["attributes"][ed.key] = ed.value
+                else:
+                    for ed in e.related_data.all():
+                        entity_data[ed.key] = ed.value
                 writer_data.append(entity_data)
         writer.writerow(
             [
@@ -482,25 +512,37 @@ encoding="UTF-16" standalone="no" ?>
             ]
         )
         keys = [
-            "Block",
             "Name",
             "Surface",
             "Perimeter",
             "Height",
             "Width",
-            "Rotation",
-            "X scale",
-            "Y scale",
         ]
         for wd in writer_data:
             row = []
             row.append(wd["id"])
             row.append(wd["layer"])
+            if "Block" in wd:
+                row.append(wd["Block"])
+            else:
+                row.append("")
             for k in keys:
-                if k in wd["data"]:
-                    row.append(wd["data"][k])
+                if k in wd:
+                    row.append(wd[k])
                 else:
                     row.append("")
+            if "Rotation" in wd:
+                row.append(wd["Rotation"])
+            else:
+                row.append("")
+            if "X scale" in wd:
+                row.append(wd["X scale"])
+            else:
+                row.append("")
+            if "Y scale" in wd:
+                row.append(wd["Y scale"])
+            else:
+                row.append("")
             if "Latitude" in wd:
                 row.append(wd["Latitude"])
             else:
@@ -509,9 +551,9 @@ encoding="UTF-16" standalone="no" ?>
                 row.append(wd["Longitude"])
             else:
                 row.append("")
-            if "attributes" in wd["data"]:
-                for attr, value in wd["data"]["attributes"].items():
-                    row.append(attr)
+            if "attributes" in wd:
+                for key, value in wd["attributes"].items():
+                    row.append(key)
                     row.append(value)
             writer.writerow(row)
         return writer
@@ -548,6 +590,10 @@ class Layer(models.Model):
         ordering = ("name",)
 
 
+def get_default_entity_data():
+    return {"processed": "true"}
+
+
 class Entity(models.Model):
 
     layer = models.ForeignKey(
@@ -556,11 +602,29 @@ class Entity(models.Model):
         related_name="related_entities",
     )
     data = models.JSONField(
-        null=True,
+        default=get_default_entity_data,
     )
     geom = GeometryCollectionField()
+    block = models.ForeignKey(
+        Layer,
+        on_delete=models.CASCADE,
+        related_name="related_insertions",
+        null=True,
+    )
     insertion = PointField(
         null=True,
+    )
+    xscale = models.FloatField(
+        _("X scale"),
+        default=1,
+    )
+    yscale = models.FloatField(
+        _("Y scale"),
+        default=1,
+    )
+    rotation = models.FloatField(
+        _("Rotation"),
+        default=0,
     )
 
     class Meta:
@@ -575,24 +639,44 @@ class Entity(models.Model):
             ltype = _("Layer")
         title_str = f"<p>{ltype}: {nh3.clean(self.layer.name)}</p>"
         data = ""
-        if self.data:
+        ent_data = self.related_data.all()
+        if ent_data.exists():
             data = f"<ul><li>ID = {self.id}</li>"
-            for k, v in self.data.items():
-                if k == "attributes":
-                    continue
-                data += f"<li>{k} = {nh3.clean(str(v))}</li>"
+            if self.layer.is_block:
+                data += "</ul><p>Attributes</p><ul>"
+                for ed in ent_data:
+                    data += f"<li>{nh3.clean(ed.key)} = {nh3.clean(ed.value)}</li>"
+            else:
+                for ed in ent_data:
+                    data += f"<li>{nh3.clean(ed.key)} = {nh3.clean(ed.value)}</li>"
             data += "</ul>"
-            if "attributes" in self.data:
-                data += "<p>Attributes</p><ul>"
-                for k, v in self.data["attributes"].items():
-                    data += f"<li>{nh3.clean(str(k))} = {nh3.clean(str(v))}</li>"
-                data += "</ul>"
         return {
             "content": title_str + data,
             "color": self.layer.color_field,
             "linetype": self.layer.linetype,
             "layer": _("Layer - ") + nh3.clean(self.layer.name),
         }
+
+
+class EntityData(models.Model):
+
+    entity = models.ForeignKey(
+        Entity,
+        on_delete=models.CASCADE,
+        related_name="related_data",
+    )
+    key = models.CharField(
+        _("Data key"),
+        max_length=50,
+    )
+    value = models.CharField(
+        _("Data value"),
+        max_length=100,
+    )
+
+    class Meta:
+        verbose_name = _("Entity Data")
+        verbose_name_plural = _("Entity Data")
 
 
 """

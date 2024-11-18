@@ -6,7 +6,8 @@ from boot_django import boot_django
 boot_django()
 
 default_labels = [
-    "djeocad.tests",
+    "djeocad.tests.tests",
+    "djeocad.tests.test_command",
 ]
 
 
