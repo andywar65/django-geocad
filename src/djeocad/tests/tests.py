@@ -221,7 +221,7 @@ class GeoCADModelTest(TestCase):
         ent = Entity.objects.last()
         self.assertEqual(ent.layer.name, "rgb")
 
-    @skip("cross test pollution?")
+    # @skip("cross test pollution?")
     def test_save_blocks(self):
         draw = Drawing.objects.get(title="Referenced")
         doc = ezdxf.readfile(draw.dxf.path)
@@ -229,9 +229,10 @@ class GeoCADModelTest(TestCase):
         geodata = msp.get_geodata()
         m, epsg = geodata.get_crs_transformation(no_checks=True)
         world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
+        blk_before = Layer.objects.filter(is_block=True).count()
         draw.save_blocks(doc, m, utm2world)
-        lay = Layer.objects.last()
-        self.assertTrue(lay.is_block)
+        blk_after = Layer.objects.filter(is_block=True).count()
+        self.assertTrue(blk_after - blk_before, 2)
 
     def test_extract_insertions(self):
         draw = Drawing.objects.get(title="Referenced")
@@ -241,8 +242,12 @@ class GeoCADModelTest(TestCase):
         m, epsg = geodata.get_crs_transformation(no_checks=True)
         world2utm, utm2world, utm_wcs, rot = draw.prepare_transformers()
         layer_table = draw.prepare_layer_table(doc)
+        block_table = draw.save_blocks(doc, m, utm2world)
+        ins_before = Entity.objects.exclude(block=None).count()
         ins = msp.query("INSERT")[0]
-        draw.extract_insertions(ins, msp, m, utm2world, layer_table)
+        draw.extract_insertions(ins, msp, m, utm2world, layer_table, block_table)
+        ins_after = Entity.objects.exclude(block=None).count()
+        self.assertTrue(ins_after - ins_before, 1)
 
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Not referenced")

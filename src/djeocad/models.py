@@ -255,10 +255,10 @@ class Drawing(models.Model):
         for e_type in self.entity_types:
             self.extract_entities(msp, e_type, m, utm2world, layer_table)
         self.create_layer_entities(layer_table)
-        self.save_blocks(doc, m, utm2world)
+        block_table = self.save_blocks(doc, m, utm2world)
         # extract insertions
         for ins in msp.query("INSERT"):
-            self.extract_insertions(ins, msp, m, utm2world, layer_table)
+            self.extract_insertions(ins, msp, m, utm2world, layer_table, block_table)
 
     def prepare_transformers(self):
         world2utm = Transformer.from_crs(4326, self.epsg, always_xy=True)
@@ -391,6 +391,7 @@ encoding="UTF-16" standalone="no" ?>
             )
 
     def save_blocks(self, doc, m, utm2world):
+        block_table = {}
         for block in doc.blocks:
             if block.name in self.name_blacklist:
                 continue
@@ -403,7 +404,7 @@ encoding="UTF-16" standalone="no" ?>
                         geometries.append(geo_proxy.__geo_interface__)
             # create block as Layer
             if not geometries == []:
-                Layer.objects.create(
+                block_obj = Layer.objects.create(
                     drawing_id=self.id,
                     name=block.name,
                     geom={
@@ -412,8 +413,10 @@ encoding="UTF-16" standalone="no" ?>
                     },
                     is_block=True,
                 )
+                block_table[block.name] = block_obj
+        return block_table
 
-    def extract_insertions(self, ins, msp, m, utm2world, layer_table):
+    def extract_insertions(self, ins, msp, m, utm2world, layer_table, block_table):
         # filter blacklisted blocks
         if ins.dxf.name in self.name_blacklist:
             return
@@ -430,29 +433,39 @@ encoding="UTF-16" standalone="no" ?>
                 if geo_proxy:
                     geometries.append(geo_proxy.__geo_interface__)
         # prepare block data
-        data_ins = {}
-        data_ins["Block"] = ins.dxf.name
         if ins.dxf.rotation:
-            data_ins["Rotation"] = round(ins.dxf.rotation, 2)
+            rotation = round(ins.dxf.rotation, 2)
+        else:
+            rotation = 0
         if ins.dxf.xscale:
-            data_ins["X scale"] = round(ins.dxf.xscale, 2)
+            xscale = round(ins.dxf.xscale, 2)
+        else:
+            xscale = 1
         if ins.dxf.yscale:
-            data_ins["Y scale"] = round(ins.dxf.yscale, 2)
-        if ins.attribs:
-            attrib_dict = {}
-            for attr in ins.attribs:
-                attrib_dict[attr.dxf.tag] = attr.dxf.text
-            data_ins["attributes"] = attrib_dict
+            yscale = round(ins.dxf.yscale, 2)
+        else:
+            yscale = 1
         # create Insertion
-        Entity.objects.create(
-            data=data_ins,
+        ins_obj = Entity.objects.create(
             layer=layer_table[ins.dxf.layer]["layer_obj"],
+            block=block_table[ins.dxf.name],
             insertion=insertion_point,
             geom={
                 "geometries": geometries,
                 "type": "GeometryCollection",
             },
+            rotation=rotation,
+            xscale=xscale,
+            yscale=yscale,
         )
+        # add attributes
+        if ins.attribs:
+            for attr in ins.attribs:
+                EntityData.objects.create(
+                    entity=ins_obj,
+                    key=attr.dxf.tag,
+                    value=attr.dxf.text,
+                )
 
     def write_csv(self, writer):
         writer_data = []
