@@ -55,7 +55,6 @@ class GeoCADModelTest(TestCase):
                     }
                 ],
             },
-            insertion={"type": "Point", "coordinates": [12.523826, 41.90339]},
         )
 
     @classmethod

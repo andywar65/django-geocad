@@ -471,16 +471,23 @@ encoding="UTF-16" standalone="no" ?>
         writer_data = []
         layers = self.related_layers.all()
         for layer in layers:
-            entities = layer.related_entities.exclude(data=None)
+            entities = layer.related_entities.all()
             for e in entities:
+                if not e.related_data:
+                    continue
                 entity_data = {
                     "id": e.id,
                     "layer": layer.name,
-                    "data": e.data,
                 }
+                for ed in e.related_data.all():
+                    entity_data[ed.key] = ed.value
                 if e.insertion:
                     entity_data["Latitude"] = e.insertion["coordinates"][0]
                     entity_data["Longitude"] = e.insertion["coordinates"][1]
+                    entity_data["Block"] = e.block.name
+                    entity_data["X scale"] = e.xscale
+                    entity_data["Y scale"] = e.yscale
+                    entity_data["Rotation"] = e.rotation
                 writer_data.append(entity_data)
         writer.writerow(
             [
@@ -501,6 +508,15 @@ encoding="UTF-16" standalone="no" ?>
             ]
         )
         keys = [
+            "Name",
+            "Surface",
+            "Perimeter",
+            "Height",
+            "Width",
+        ]
+        exclude_list = [
+            "id",
+            "layer",
             "Block",
             "Name",
             "Surface",
@@ -510,16 +526,34 @@ encoding="UTF-16" standalone="no" ?>
             "Rotation",
             "X scale",
             "Y scale",
+            "Latitude",
+            "Longitude",
         ]
         for wd in writer_data:
             row = []
             row.append(wd["id"])
             row.append(wd["layer"])
+            if "Block" in wd:
+                row.append(wd["Block"])
+            else:
+                row.append("")
             for k in keys:
-                if k in wd["data"]:
-                    row.append(wd["data"][k])
+                if k in wd:
+                    row.append(wd[k])
                 else:
                     row.append("")
+            if "Rotation" in wd:
+                row.append(wd["Rotation"])
+            else:
+                row.append("")
+            if "X scale" in wd:
+                row.append(wd["X scale"])
+            else:
+                row.append("")
+            if "Y scale" in wd:
+                row.append(wd["Y scale"])
+            else:
+                row.append("")
             if "Latitude" in wd:
                 row.append(wd["Latitude"])
             else:
@@ -528,10 +562,11 @@ encoding="UTF-16" standalone="no" ?>
                 row.append(wd["Longitude"])
             else:
                 row.append("")
-            if "attributes" in wd["data"]:
-                for attr, value in wd["data"]["attributes"].items():
-                    row.append(attr)
-                    row.append(value)
+            for key, value in wd.items():
+                if key in exclude_list:
+                    continue
+                row.append(key)
+                row.append(value)
             writer.writerow(row)
         return writer
 
