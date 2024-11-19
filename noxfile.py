@@ -5,7 +5,7 @@ import nox
 @nox.session(python=["3.9", "3.10", "3.11", "3.12"])
 def test420(session):
     session.install(
-        "django==4.2.16",
+        "django==4.2",
         "django-colorfield",
         "django-geojson",
         "django-leaflet",
@@ -13,18 +13,19 @@ def test420(session):
         "environs[django]",
         "ezdxf",
         "nh3",
-        "psycopg[binary,pool]",
         "pyproj",
         "shapely",
     )
-    session.run("./manage/test.py", external=True)
+    session.run(
+        "./project/manage.py test --settings=project.settings.tests", external=True
+    )
 
 
 # 5.1 end of life December 2025
 @nox.session(python=["3.10", "3.11", "3.12"])
 def test510(session):
     session.install(
-        "django==5.1.1",
+        "django==5.1",
         "django-colorfield",
         "django-geojson",
         "django-leaflet",
@@ -32,8 +33,9 @@ def test510(session):
         "environs[django]",
         "ezdxf",
         "nh3",
-        "psycopg[binary,pool]",
         "pyproj",
         "shapely",
     )
-    session.run("./manage/test.py", external=True)
+    session.run(
+        "./project/manage.py test --settings=project.settings.tests", external=True
+    )
