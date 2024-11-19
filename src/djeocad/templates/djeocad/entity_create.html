@@ -15,7 +15,7 @@
 {% endblock extra-head %}
 
 {% block content %}
-  <form action="{% url 'djeocad:insertion_create' pk=drawing.id}" method="post">
+  <form action="{% url 'djeocad:insertion_create' pk=drawing.id %}" method="post">
     {% csrf_token %}
     {{ form }}
     <input type="submit" value="Submit">

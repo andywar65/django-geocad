@@ -3,8 +3,10 @@ from typing import Any
 
 from django.db.models.query import QuerySet
 from django.forms import FloatField, ModelForm, NumberInput
-from django.http import Http404, HttpResponse
+from django.forms.models import BaseModelForm
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, ListView
@@ -70,9 +72,58 @@ class EntityCreateForm(ModelForm):
         return cleaned_data
 
 
+def add_block_insertion(request, pk):
+    drawing = get_object_or_404(Drawing, id=pk)
+    blocks = drawing.related_layers.filter(is_block=True)
+    if not blocks.exists():
+        raise Http404
+    layers = drawing.related_layers.filter(is_block=False)
+    context = {}
+    if request.POST:
+        form = EntityCreateForm(request.POST)
+        if form.is_valid():
+            ent = Entity(
+                layer=form.cleaned_data["layer"],
+                block=form.cleaned_data["block"],
+                rotation=form.cleaned_data["rotation"],
+                xscale=form.cleaned_data["xscale"],
+                yscale=form.cleaned_data["yscale"],
+                insertion={
+                    "type": "Point",
+                    "coordinates": [
+                        form.cleaned_data["long"],
+                        form.cleaned_data["lat"],
+                    ],
+                },
+            )
+            ent.save()
+            return HttpResponseRedirect(
+                reverse("djeocad:drawing_detail", kwargs={"pk": pk})
+            )
+    else:
+        form = EntityCreateForm(
+            initial={
+                "layer": layers,
+                "block": blocks,
+                "rotation": 0,
+                "xscale": 1,
+                "yscale": 1,
+                "lat": drawing.geom["coordinates"][1],
+                "long": drawing.geom["coordinates"][0],
+            }
+        )
+    context["form"] = form
+    id_list = layers.values_list("id", flat=True)
+    context["lines"] = Entity.objects.filter(layer_id__in=id_list).prefetch_related()
+    name_list = layers.values_list("name", flat=True)
+    context["layer_list"] = list(dict.fromkeys(name_list))
+    context["layer_list"] = [_("Layer - ") + s for s in context["layer_list"]]
+    context["drawing"] = drawing
+    return TemplateResponse(request, "djeocad/entity_create.html", context)
+
+
 class EntityCreateView(CreateView):
     model = Entity
-    form_class = EntityCreateForm
     template_name = "djeocad/entity_create.html"
 
     def setup(self, request, *args, **kwargs):
@@ -83,12 +134,15 @@ class EntityCreateView(CreateView):
         if not self.blocks.exists():
             raise Http404
 
+    def get_form_class(self) -> type[BaseModelForm]:
+        if self.request.POST:
+            return EntityCreateForm(self.drawing, self.request.POST)
+        return EntityCreateForm(self.drawing)
+
     def get_initial(self) -> dict[str, Any]:
         initial = super().get_initial()
         initial["lat"] = self.drawing.geom["coordinates"][1]
         initial["long"] = self.drawing.geom["coordinates"][0]
-        initial["layer"] = self.layers
-        initial["block"] = self.blocks
         return initial
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
