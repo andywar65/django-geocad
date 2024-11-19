@@ -589,6 +589,9 @@ class Layer(models.Model):
         verbose_name_plural = _("Layers")
         ordering = ("name",)
 
+    def __str__(self):
+        return self.name
+
 
 def get_default_entity_data():
     return {"processed": "true"}

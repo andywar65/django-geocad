@@ -103,8 +103,6 @@ def add_block_insertion(request, pk):
     else:
         form = EntityCreateForm(
             initial={
-                "layer": layers,
-                "block": blocks,
                 "rotation": 0,
                 "xscale": 1,
                 "yscale": 1,
@@ -112,6 +110,8 @@ def add_block_insertion(request, pk):
                 "long": drawing.geom["coordinates"][0],
             }
         )
+    form.fields["layer"].queryset = layers
+    form.fields["block"].queryset = blocks
     context["form"] = form
     id_list = layers.values_list("id", flat=True)
     context["lines"] = Entity.objects.filter(layer_id__in=id_list).prefetch_related()
