@@ -21,7 +21,7 @@ class GeoCADCommandTest(TestCase):
         draw1.title = "Not referenced"
         draw1.dxf = SimpleUploadedFile("nogeo.dxf", content, "image/x-dxf")
         draw1.save()
-        layer = Layer.objects.create(drawing=draw1, name="Layer")
+        layer = Layer.objects.create(drawing=draw1, name="Lajer")
         block = Layer.objects.create(drawing=draw1, name="Bloke", is_block=True)
         Entity.objects.create(
             layer=layer,
