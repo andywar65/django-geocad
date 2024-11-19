@@ -612,6 +612,7 @@ class Entity(models.Model):
         on_delete=models.CASCADE,
         related_name="related_insertions",
         null=True,
+        blank=False,
     )
     insertion = PointField(
         null=True,
