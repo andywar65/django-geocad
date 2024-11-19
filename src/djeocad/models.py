@@ -604,7 +604,9 @@ class Entity(models.Model):
     data = models.JSONField(
         default=get_default_entity_data,
     )
-    geom = GeometryCollectionField()
+    geom = GeometryCollectionField(
+        null=True,
+    )
     block = models.ForeignKey(
         Layer,
         on_delete=models.CASCADE,
