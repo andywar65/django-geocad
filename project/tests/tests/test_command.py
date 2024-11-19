@@ -14,16 +14,14 @@ from djeocad.models import Drawing, Entity, Layer
 class GeoCADCommandTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/nogeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/nogeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
         draw1 = Drawing()
         draw1.title = "Not referenced"
         draw1.dxf = SimpleUploadedFile("nogeo.dxf", content, "image/x-dxf")
         draw1.save()
-        layer = Layer.objects.create(drawing=draw1, name="Layer")
+        layer = Layer.objects.create(drawing=draw1, name="Lajer")
         block = Layer.objects.create(drawing=draw1, name="Bloke", is_block=True)
         Entity.objects.create(
             layer=layer,

@@ -8,6 +8,10 @@ profile = "black"
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "project.settings.tests"
+python_files = ["test_*.py", ]
+
 [project]
 name = "django-geocad"
 version = "0.4.0"

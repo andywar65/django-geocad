@@ -16,23 +16,17 @@ from djeocad.models import Drawing, Entity, EntityData, Layer, cad2hex
 class GeoCADModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/nogeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/nogeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
         draw1 = Drawing()
-        draw1.title = "Not referenced"
+        draw1.title = "Unreferenced"
         draw1.dxf = SimpleUploadedFile("nogeo.dxf", content, "image/x-dxf")
         draw1.save()
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/yesgeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/yesgeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
-        img_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/image.jpg"
-        )
+        img_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/image.jpg")
         with open(img_path, "rb") as fi:
             img_content = fi.read()
         draw2 = Drawing()
@@ -79,25 +73,25 @@ class GeoCADModelTest(TestCase):
         self.assertTrue(Group.objects.filter(name="GeoCAD Manager").exists())
 
     def test_drawing_str_method(self):
-        draw = Drawing.objects.get(title="Not referenced")
-        self.assertEqual(draw.__str__(), "Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
+        self.assertEqual(draw.__str__(), "Unreferenced")
 
     def test_drawing_epsg_none(self):
-        draw = Drawing.objects.get(title="Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
         self.assertEqual(draw.epsg, None)
 
     def test_drawing_geom_none(self):
-        draw = Drawing.objects.get(title="Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
         self.assertEqual(draw.geom, None)
 
     def test_drawing_epsg_none_set_geom(self):
-        draw = Drawing.objects.get(title="Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
         draw.geom = {"type": "Point", "coordinates": [120.48, 42.00]}
         draw.save()
         self.assertEqual(int(draw.epsg), 32651)  # why string?
 
     def test_drawing_epsg_none_set_parent(self):
-        draw = Drawing.objects.get(title="Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
         parent = Drawing.objects.get(title="Referenced")
         draw.parent = parent
         draw.save()
@@ -105,8 +99,7 @@ class GeoCADModelTest(TestCase):
         self.assertIsNone(draw.parent)
 
     def test_drawing_epsg_none_set_new_parent(self):
-        # for coverage purposes, but not covering!
-        draw = Drawing.objects.get(title="Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
         parent = Drawing.objects.get(title="Referenced")
         draw.parent = parent
         draw.save()
@@ -116,23 +109,17 @@ class GeoCADModelTest(TestCase):
         self.assertIsNone(draw.parent)
 
     def test_drawing_change_dxf_no_geodata(self):
-        # for coverage purposes, but not covering!
         draw = Drawing.objects.get(title="Referenced")
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/nogeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/nogeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
         draw.dxf = SimpleUploadedFile("nogeo.dxf", content, "image/x-dxf")
         draw.save()
-        self.assertIsNone(draw.epsg)
+        self.assertEqual(draw.epsg, 32633)
 
     def test_drawing_change_dxf_with_geodata(self):
-        # for coverage purposes, but not covering!
         draw = Drawing.objects.get(title="Referenced")
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/yesgeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/yesgeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
         draw.dxf = SimpleUploadedFile("yesgeo.dxf", content, "image/x-dxf")
@@ -140,7 +127,6 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(draw.epsg, 32633)
 
     def test_drawing_change_design_point(self):
-        # for coverage purposes, but not covering!
         draw = Drawing.objects.get(title="Referenced")
         draw.designx = 1
         draw.save()
@@ -153,7 +139,7 @@ class GeoCADModelTest(TestCase):
         self.assertFalse(draw.related_layers.all().exists())
 
     def test_get_geodata_from_parent(self):
-        draw = Drawing.objects.get(title="Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
         parent = Drawing.objects.get(title="Referenced")
         draw.parent = parent
         draw.get_geodata_from_parent()
@@ -198,7 +184,7 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(rot, 0)
 
     def test_fake_geodata(self):
-        draw = Drawing.objects.get(title="Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
         draw.epsg = 32633
         draw.geom = {"type": "Point", "coordinates": [12.0, 42.0]}
         doc = ezdxf.readfile(draw.dxf.path)
@@ -219,7 +205,7 @@ class GeoCADModelTest(TestCase):
         self.assertIn(f"<ObjectId>EPSG={draw.epsg}</ObjectId>", xml)
 
     def test_prepare_layer_table(self):
-        draw = Drawing.objects.get(title="Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
         doc = ezdxf.readfile(draw.dxf.path)
         layer_table = draw.prepare_layer_table(doc)
         self.assertEqual(len(layer_table), 2)
@@ -290,7 +276,7 @@ class GeoCADModelTest(TestCase):
         self.assertTrue(ins_after - ins_before, 1)
 
     def test_drawing_popup(self):
-        draw = Drawing.objects.get(title="Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
         popup = {
             "content": f'<a href="/geocad/{draw.id}"><strong>{draw.title}</strong></a>',
         }
@@ -493,7 +479,7 @@ class GeoCADModelTest(TestCase):
                 "djeocad:drawing_list",
             )
         )
-        self.assertEqual(len(response.context["unreferenced"]), 1)
+        self.assertEqual(len(response.context["unreferenced"]), 2)
 
     def test_drawing_detail_view_lines_in_context(self):
         draw = Drawing.objects.get(title="Referenced")
@@ -508,13 +494,13 @@ class GeoCADModelTest(TestCase):
         response = self.client.get(
             reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
         )
-        self.assertEqual(len(response.context["lines"]), 5)
+        self.assertEqual(len(response.context["lines"]), 6)
         self.assertEqual(len(response.context["layer_list"]), 4)
 
     @skip("problems with admin views")
     def test_drawing_add_parent_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
-        notref = Drawing.objects.get(title="Not referenced")
+        notref = Drawing.objects.get(title="Unreferenced")
         yesref = Drawing.objects.get(title="Referenced")
         response = self.client.post(
             f"/admin/djeocad/drawing/{notref.id}/change/",
@@ -543,7 +529,7 @@ class GeoCADModelTest(TestCase):
     @skip("problems with admin views")
     def test_drawing_add_geom_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
-        notref = Drawing.objects.get(title="Not referenced")
+        notref = Drawing.objects.get(title="Unreferenced")
         response = self.client.post(
             f"/admin/djeocad/drawing/{notref.id}/change/",
             {
@@ -571,13 +557,11 @@ class GeoCADModelTest(TestCase):
 
     @skip("problems with admin views")
     def test_drawing_change_dxf_in_admin(self):
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/yesgeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/yesgeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
         self.client.login(username="boss", password="p4s5w0r6")
-        notref = Drawing.objects.get(title="Not referenced")
+        notref = Drawing.objects.get(title="Unreferenced")
         response = self.client.post(
             f"/admin/djeocad/drawing/{notref.id}/change/",
             {
@@ -605,7 +589,7 @@ class GeoCADModelTest(TestCase):
     @skip("problems with admin views")
     def test_drawing_change_other_stuff_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
-        notref = Drawing.objects.get(title="Not referenced")
+        notref = Drawing.objects.get(title="Unreferenced")
         response = self.client.post(
             f"/admin/djeocad/drawing/{notref.id}/change/",
             {
@@ -632,12 +616,10 @@ class GeoCADModelTest(TestCase):
 
     def test_drawing_get_geodata_from_dxf_false(self):
         # we want to make sure that nogeo.dxf has not been polluted
-        dxf_path = Path(settings.BASE_DIR).joinpath(
-            "djeocad/static/djeocad/tests/nogeo.dxf"
-        )
+        dxf_path = Path(settings.BASE_DIR).joinpath("tests/static/tests/nogeo.dxf")
         with open(dxf_path, "rb") as f:
             content = f.read()
-        draw = Drawing.objects.get(title="Not referenced")
+        draw = Drawing.objects.get(title="Unreferenced")
         draw.dxf = SimpleUploadedFile("nogeo.dxf", content, "image/x-dxf")
         draw.save()
         doc = draw.get_geodata_from_dxf()
@@ -645,6 +627,6 @@ class GeoCADModelTest(TestCase):
 
     def test_drawing_change_view_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
-        notref = Drawing.objects.get(title="Not referenced")
+        notref = Drawing.objects.get(title="Unreferenced")
         response = self.client.get(f"/admin/djeocad/drawing/{notref.id}/change/")
         self.assertEqual(response.status_code, 200)
