@@ -1,11 +1,18 @@
 from django.urls import path
 
-from .views import DrawingDetailView, DrawingListView, csv_download, drawing_download
+from .views import (
+    DrawingDetailView,
+    DrawingListView,
+    EntityCreateView,
+    csv_download,
+    drawing_download,
+)
 
 app_name = "djeocad"
 urlpatterns = [
     path("", DrawingListView.as_view(), name="drawing_list"),
     path("<pk>", DrawingDetailView.as_view(), name="drawing_detail"),
+    path("<pk>/insertion", EntityCreateView.as_view(), name="insertion_create"),
     path(
         "<pk>/csv",
         csv_download,

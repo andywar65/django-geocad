@@ -49,4 +49,15 @@ function map_init(map, options) {
     }
 
     getCollections()
+
+    function onMapClick(e) {
+      var inputlat = document.getElementById("id_lat");
+        var inputlong = document.getElementById("id_long");
+        inputlat.setAttribute('value', e.latlng.lat);
+        inputlong.setAttribute('value', e.latlng.lng);
+        layerGroup.clearLayers();
+        L.marker([e.latlng.lat, e.latlng.lng]).addTo(layerGroup)
+    }
+
+    map.on('click', onMapClick);
 }

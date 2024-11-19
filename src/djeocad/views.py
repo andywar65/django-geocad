@@ -54,8 +54,10 @@ class EntityCreateForm(ModelForm):
         widget=NumberInput(attrs={"max": 180, "min": -180}),
         required=True,
     )
-    model = Entity
-    fields = ["layer", "block", "rotation", "xscale", "yscale"]
+
+    class Meta:
+        model = Entity
+        fields = ["layer", "block", "rotation", "xscale", "yscale"]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -71,11 +73,11 @@ class EntityCreateForm(ModelForm):
 class EntityCreateView(CreateView):
     model = Entity
     form_class = EntityCreateForm
-    template_name = "djeocad/create_insertion.html"
+    template_name = "djeocad/entity_create.html"
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.drawing = get_object_or_404(Drawing, id=request.GET["pk"])
+        self.drawing = get_object_or_404(Drawing, id=kwargs["pk"])
         self.layers = self.drawing.related_layers.filter(is_block=False)
         self.blocks = self.drawing.related_layers.filter(is_block=True)
         if not self.blocks.exists():
@@ -98,6 +100,7 @@ class EntityCreateView(CreateView):
         name_list = self.layers.values_list("name", flat=True)
         context["layer_list"] = list(dict.fromkeys(name_list))
         context["layer_list"] = [_("Layer - ") + s for s in context["layer_list"]]
+        context["drawing"] = self.drawing
         return context
 
     def form_valid(self, form):
