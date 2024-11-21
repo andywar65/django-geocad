@@ -18,11 +18,20 @@
   <details>
     <summary style="font-size: 1.875em;">{% trans "Drawing" %}: {{ object.title }}</summary>
     <ul>
-      <li>
-        <a href="/admin/djeocad/drawing/{{ object.id }}/change/">
-          {% trans "Modify" %}
-        </a>
-      </li>
+      {% if perms.djeocad.change_drawing %}
+        <li>
+          <a href="/admin/djeocad/drawing/{{ object.id }}/change/">
+            {% trans "Modify" %}
+          </a>
+        </li>
+        {% if blocks %}
+          <li>
+            <a href="{% url 'djeocad:insertion_create' pk=object.id %}">
+              {% trans "Add insertions" %}
+            </a>
+          </li>
+        {% endif %}
+      {% endif %}
       <li>
         <a href="{% url 'djeocad:drawing_download' pk=object.id %}">
           {% trans "Download DXF with Geodata" %}
