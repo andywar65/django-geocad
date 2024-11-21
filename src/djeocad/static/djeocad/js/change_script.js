@@ -26,6 +26,7 @@ function map_init(map, options) {
         }
       }
       // add objects to layers
+      alert(document.getElementById("marker_data").textContent)
       collection = JSON.parse(document.getElementById("marker_data").textContent);
       for (marker of collection.features) {
         // let author = marker.properties.popupContent.layer

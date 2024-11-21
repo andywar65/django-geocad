@@ -15,13 +15,13 @@
 {% endblock extra-head %}
 
 {% block content %}
-  <h4>{% trans "Add insertion to drawing" %}: {{ drawing.title }}</h4>
-  <form action="{% url 'djeocad:insertion_create' pk=drawing.id %}" method="post">
+  <h4>{% trans "Change insertion of drawing" %}: {{ drawing.title }}</h4>
+  <form action="{% url 'djeocad:insertion_change' pk=object.id %}" method="post">
     {% csrf_token %}
     {{ form }}
     <input type="submit" value="Submit">
   </form>
-  <script id="marker_data" type="application/json">{{ drawing|geojsonfeature|safe }}</script>
+  <script id="marker_data" type="application/json">{{ object|geojsonfeature:":insertion"|safe }}</script>
   {% include "djeocad/map_data.html" %}
   <script id="line_data" type="application/json">{{ lines|geojsonfeature|safe }}</script>
   {{ layer_list|json_script:"layer_data" }}

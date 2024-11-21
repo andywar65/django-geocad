@@ -101,7 +101,7 @@ def add_block_insertion(request, pk):
             )
             ent.save()
             return HttpResponseRedirect(
-                reverse("djeocad:drawing_detail", kwargs={"pk": pk})
+                reverse("djeocad:insertion_change", kwargs={"pk": ent.id})
             )
     else:
         form = EntityCreateForm(
@@ -123,6 +123,61 @@ def add_block_insertion(request, pk):
     context["layer_list"] = [_("Layer - ") + s for s in context["layer_list"]]
     context["drawing"] = drawing
     return TemplateResponse(request, "djeocad/entity_create.html", context)
+
+
+@permission_required("djeocad.change_drawing")
+def change_block_insertion(request, pk):
+    object = get_object_or_404(Entity, id=pk)
+    drawing = object.layer.drawing
+    blocks = drawing.related_layers.filter(is_block=True)
+    if not blocks.exists():
+        raise Http404
+    layers = drawing.related_layers.filter(is_block=False)
+    context = {}
+    if request.POST:
+        form = EntityCreateForm(request.POST)
+        if form.is_valid():
+            object.layer = (form.cleaned_data["layer"],)
+            object.block = (form.cleaned_data["block"],)
+            object.rotation = (form.cleaned_data["rotation"],)
+            object.xscale = (form.cleaned_data["xscale"],)
+            object.yscale = (form.cleaned_data["yscale"],)
+            object.insertion = (
+                {
+                    "type": "Point",
+                    "coordinates": [
+                        form.cleaned_data["long"],
+                        form.cleaned_data["lat"],
+                    ],
+                },
+            )
+            object.save()
+            return HttpResponseRedirect(
+                reverse("djeocad:drawing_detail", kwargs={"pk": drawing.id})
+            )
+    else:
+        form = EntityCreateForm(
+            initial={
+                "layer": object.layer,
+                "block": object.block,
+                "rotation": object.rotation,
+                "xscale": object.xscale,
+                "yscale": object.yscale,
+                "lat": object.insertion["coordinates"][1],
+                "long": object.insertion["coordinates"][0],
+            }
+        )
+    form.fields["layer"].queryset = layers
+    form.fields["block"].queryset = blocks
+    context["form"] = form
+    id_list = layers.values_list("id", flat=True)
+    context["lines"] = Entity.objects.filter(layer_id__in=id_list).prefetch_related()
+    name_list = layers.values_list("name", flat=True)
+    context["layer_list"] = list(dict.fromkeys(name_list))
+    context["layer_list"] = [_("Layer - ") + s for s in context["layer_list"]]
+    context["drawing"] = drawing
+    context["object"] = object
+    return TemplateResponse(request, "djeocad/entity_change.html", context)
 
 
 def csv_download(request, pk):
