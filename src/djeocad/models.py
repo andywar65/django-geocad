@@ -663,6 +663,13 @@ class Entity(models.Model):
             "layer": _("Layer - ") + nh3.clean(self.layer.name),
         }
 
+    def save(self, *args, **kwargs):
+        if self.block:
+            pass
+        super().save(*args, **kwargs)
+        if self.block and not self.related_data:
+            pass
+
 
 class EntityData(models.Model):
 
