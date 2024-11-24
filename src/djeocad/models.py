@@ -665,6 +665,7 @@ class Entity(models.Model):
 
     def save(self, *args, **kwargs):
         if self.block:
+            # TODO use real dxf file
             # we will use a fake DXF to help us
             # prepare transformers
             world2utm, utm2world, utm_wcs, rot = (
@@ -720,8 +721,16 @@ class Entity(models.Model):
             }
             self.data["added"] = True
         super().save(*args, **kwargs)
-        if self.block and not self.related_data:
-            pass
+        if self.block and not self.related_data.exists():
+            first = Entity.objects.filter(block=self.block).first()
+            data = first.related_data.all()
+            if data.exists():
+                for d in data:
+                    EntityData.objects.create(
+                        entity=self,
+                        key=d.key,
+                        value=d.value,
+                    )
 
 
 class EntityData(models.Model):
