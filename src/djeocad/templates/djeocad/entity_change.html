@@ -27,6 +27,9 @@
   >
     {% trans "Delete insertion" %}
   </a>
+  <div id="entity_data">
+    {% include "djeocad/htmx/entity_data_list.html" %}
+  </div>
   <script id="marker_data" type="application/json">{{ object|geojsonfeature:":insertion"|safe }}</script>
   {% include "djeocad/map_data.html" %}
   <script id="line_data" type="application/json">{{ lines|geojsonfeature|safe }}</script>
@@ -35,21 +38,5 @@
   <div>
     {% leaflet_map "mymap" callback="window.map_init" %}
   </div>
-  {% if object.related_data.exists %}
-    <table>
-      <tr>
-        <th>{% trans "Key" %}</th>
-        <th>{% trans "Value" %}</th>
-        <th></th>
-        <th></th>
-      </tr>
-      {% for data in object.related_data.all %}
-        <td>{{ data.key }}</td>
-        <td>{{ data.value }}</td>
-        <td>Modify</td>
-        <td>Delete</td>
-      {% endfor %}
-    </table>
-  {% endif %}
   <script src="{% static "djeocad/js/htmx.min.js" %}"></script>
 {% endblock content %}

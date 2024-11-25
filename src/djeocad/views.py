@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, ListView
 
-from .models import Drawing, Entity
+from .models import Drawing, Entity, EntityData
 
 
 class DrawingListView(ListView):
@@ -30,15 +30,7 @@ class DrawingListView(ListView):
 
 class DrawingDetailView(DetailView):
     model = Drawing
-    template_name = "djeocad/htmx/drawing_detail.html"
-
-    def get_template_names(self) -> list[str]:
-        if (
-            "Hx-Request" in self.request.headers
-            and self.request.headers["Hx-Request"] == "true"
-        ):
-            return [self.template_name]
-        return [self.template_name.replace("htmx/", "")]
+    template_name = "djeocad/drawing_detail.html"
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -178,6 +170,7 @@ def change_block_insertion(request, pk):
     context["layer_list"] = [_("Layer - ") + s for s in context["layer_list"]]
     context["drawing"] = drawing
     context["object"] = object
+    context["related_data"] = object.related_data.all()
     return TemplateResponse(request, "djeocad/entity_change.html", context)
 
 
@@ -189,6 +182,25 @@ def delete_block_insertion(request, pk):
     return HttpResponseRedirect(
         reverse("djeocad:drawing_detail", kwargs={"pk": drawing.id})
     )
+
+
+class EntityDataListView(ListView):
+    model = EntityData
+    template = "djeocad/htmx/entity_data_list.html"
+    context_object_name = "related_data"
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.entity = get_object_or_404(Entity, id=kwargs["pk"])
+
+    def get_queryset(self):
+        return EntityData.objects.filter(entity=self.entity)
+
+
+class EntityDataForm(ModelForm):
+    class Meta:
+        model = EntityData
+        fields = ["key", "value"]
 
 
 def csv_download(request, pk):

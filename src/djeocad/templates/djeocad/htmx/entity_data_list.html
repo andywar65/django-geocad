@@ -1,0 +1,16 @@
+{% if related_data %}
+  <table>
+    <tr>
+      <th>{% trans "Key" %}</th>
+      <th>{% trans "Value" %}</th>
+      <th></th>
+      <th></th>
+    </tr>
+    {% for data in related_data %}
+      <td>{{ data.key }}</td>
+      <td>{{ data.value }}</td>
+      <td>Modify</td>
+      <td>Delete</td>
+    {% endfor %}
+  </table>
+{% endif %}
