@@ -8,9 +8,11 @@
     {% block extra-head %}{% endblock extra-head %}
   </head>
   <body>
-    {% block content %}
-      <h1>Hello, world!</h1>
-    {% endblock content %}
+    <div id="content">
+      {% block content %}
+        <h1>Hello, world!</h1>
+      {% endblock content %}
+    </div>
     {% block extra-js %}{% endblock extra-js %}
   </body>
 </html>
