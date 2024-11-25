@@ -639,16 +639,16 @@ class Entity(models.Model):
 
     @property
     def popupContent(self):
-        if self.layer.is_block:
-            ltype = _("Block")
-        else:
-            ltype = _("Layer")
+        ltype = _("Layer")
         title_str = f"<p>{ltype}: {nh3.clean(self.layer.name)}</p>"
+        if self.block:
+            ltype = _("Block")
+            title_str += f"<p>{ltype}: {nh3.clean(self.block.name)}</p>"
         data = ""
         ent_data = self.related_data.all()
         if ent_data.exists():
             data = f"<ul><li>ID = {self.id}</li>"
-            if self.layer.is_block:
+            if self.block:
                 data += "</ul><p>Attributes</p><ul>"
                 for ed in ent_data:
                     data += f"<li>{nh3.clean(ed.key)} = {nh3.clean(ed.value)}</li>"
