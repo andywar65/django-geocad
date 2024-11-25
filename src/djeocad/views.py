@@ -221,8 +221,12 @@ def create_entity_data(request, pk):
     if request.POST:
         form = EntityDataForm(request.POST)
         if form.is_valid():
-            form.instance.entity = entity
-            form.instance.save()
+            data = EntityData.objects.create(
+                entity=entity,
+                key=form.cleaned_data["key"],
+                value=form.cleaned_data["value"],
+            )
+            data.save()
             return HttpResponseRedirect(
                 reverse("djeocad:data_list", kwargs={"pk": entity.id})
             )

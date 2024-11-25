@@ -639,15 +639,15 @@ class Entity(models.Model):
 
     @property
     def popupContent(self):
+        title_str = f"<p>ID = {self.id}</p>"
         ltype = _("Layer")
-        title_str = f"<p>{ltype}: {nh3.clean(self.layer.name)}</p>"
+        title_str += f"<ul><li>{ltype}: {nh3.clean(self.layer.name)}</li>"
         if self.block:
             ltype = _("Block")
-            title_str += f"<p>{ltype}: {nh3.clean(self.block.name)}</p>"
+            title_str += f"<li>{ltype}: {nh3.clean(self.block.name)}</li>"
         data = ""
         ent_data = self.related_data.all()
         if ent_data.exists():
-            data = f"<ul><li>ID = {self.id}</li>"
             if self.block:
                 data += "</ul><p>Attributes</p><ul>"
                 for ed in ent_data:
@@ -655,7 +655,7 @@ class Entity(models.Model):
             else:
                 for ed in ent_data:
                     data += f"<li>{nh3.clean(ed.key)} = {nh3.clean(ed.value)}</li>"
-            data += "</ul>"
+        data += "</ul>"
         return {
             "content": title_str + data,
             "color": self.layer.color_field,
