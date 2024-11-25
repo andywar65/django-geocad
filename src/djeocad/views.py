@@ -30,7 +30,15 @@ class DrawingListView(ListView):
 
 class DrawingDetailView(DetailView):
     model = Drawing
-    template_name = "djeocad/drawing_detail.html"
+    template_name = "djeocad/htmx/drawing_detail.html"
+
+    def get_template_names(self) -> list[str]:
+        if (
+            "Hx-Request" in self.request.headers
+            and self.request.headers["Hx-Request"] == "true"
+        ):
+            return [self.template_name]
+        return [self.template_name.replace("htmx/", "")]
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -177,11 +185,10 @@ def change_block_insertion(request, pk):
 def delete_block_insertion(request, pk):
     object = get_object_or_404(Entity, id=pk)
     drawing = object.layer.drawing
-    if "Hx-Request" in request.headers and request.headers["Hx-Request"] == "true":
-        object.delete()
-        return HttpResponseRedirect(
-            reverse("djeocad:drawing_detail", kwargs={"pk": drawing.id})
-        )
+    object.delete()
+    return HttpResponseRedirect(
+        reverse("djeocad:drawing_detail", kwargs={"pk": drawing.id})
+    )
 
 
 def csv_download(request, pk):
