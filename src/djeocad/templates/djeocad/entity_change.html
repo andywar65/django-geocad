@@ -21,6 +21,14 @@
     {{ form }}
     <input type="submit" value="Submit">
   </form>
+  <a style="cursor: pointer;"
+     hx-get="{% url 'djeocad:insertion_delete' pk=object.id %}"
+     hx-boost="true"
+     hx-confirm="{% trans 'Are you sure you want to delete this insertion?' %}"
+     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+  >
+    {% trans "Delete insertion" %}
+  </a>
   <script id="marker_data" type="application/json">{{ object|geojsonfeature:":insertion"|safe }}</script>
   {% include "djeocad/map_data.html" %}
   <script id="line_data" type="application/json">{{ lines|geojsonfeature|safe }}</script>

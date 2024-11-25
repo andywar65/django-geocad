@@ -173,6 +173,17 @@ def change_block_insertion(request, pk):
     return TemplateResponse(request, "djeocad/entity_change.html", context)
 
 
+@permission_required("djeocad.change_drawing")
+def delete_block_insertion(request, pk):
+    object = get_object_or_404(Entity, id=pk)
+    drawing = object.layer.drawing
+    if "Hx-Request" in request.headers and request.headers["Hx-Request"] == "true":
+        object.delete()
+        return HttpResponseRedirect(
+            reverse("djeocad:drawing_detail", kwargs={"pk": drawing.id})
+        )
+
+
 def csv_download(request, pk):
     drawing = get_object_or_404(Drawing, id=pk)
     # Create the HttpResponse object with the appropriate CSV header.

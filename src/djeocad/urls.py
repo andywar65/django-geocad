@@ -6,6 +6,7 @@ from .views import (
     add_block_insertion,
     change_block_insertion,
     csv_download,
+    delete_block_insertion,
     drawing_download,
 )
 
@@ -15,6 +16,7 @@ urlpatterns = [
     path("<pk>", DrawingDetailView.as_view(), name="drawing_detail"),
     path("<pk>/insertion", add_block_insertion, name="insertion_create"),
     path("insertion/<pk>/change", change_block_insertion, name="insertion_change"),
+    path("insertion/<pk>/delete", delete_block_insertion, name="insertion_delete"),
     path(
         "<pk>/csv",
         csv_download,
