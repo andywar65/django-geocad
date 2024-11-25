@@ -19,6 +19,7 @@
   <form action="{% url 'djeocad:insertion_change' pk=object.id %}" method="post">
     {% csrf_token %}
     {{ form }}
+    <p>{% trans "Click on the map below to change coordinates" %}</p>
     <input type="submit" value="Submit">
   </form>
   <a style="color: red;"

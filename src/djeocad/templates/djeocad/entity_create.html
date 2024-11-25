@@ -19,6 +19,7 @@
   <form action="{% url 'djeocad:insertion_create' pk=drawing.id %}" method="post">
     {% csrf_token %}
     {{ form }}
+    <p>{% trans "Click on the map below to change coordinates" %}</p>
     <input type="submit" value="Submit">
   </form>
   <script id="marker_data" type="application/json">{{ drawing|geojsonfeature|safe }}</script>
