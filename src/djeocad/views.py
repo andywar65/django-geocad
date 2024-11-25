@@ -171,6 +171,7 @@ def change_block_insertion(request, pk):
     context["drawing"] = drawing
     context["object"] = object
     context["related_data"] = object.related_data.all()
+    context["data_form"] = EntityDataForm()
     return TemplateResponse(request, "djeocad/entity_change.html", context)
 
 
@@ -186,7 +187,7 @@ def delete_block_insertion(request, pk):
 
 class EntityDataListView(ListView):
     model = EntityData
-    template = "djeocad/htmx/entity_data_list.html"
+    template_name = "djeocad/htmx/entity_data_list.html"
     context_object_name = "related_data"
 
     def setup(self, request, *args, **kwargs):
@@ -196,11 +197,35 @@ class EntityDataListView(ListView):
     def get_queryset(self):
         return EntityData.objects.filter(entity=self.entity)
 
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["object"] = self.entity
+        context["data_form"] = EntityDataForm()
+        return context
+
 
 class EntityDataForm(ModelForm):
     class Meta:
         model = EntityData
         fields = ["key", "value"]
+
+
+@permission_required("djeocad.change_drawing")
+def create_entity_data(request, pk):
+    if (
+        "Hx-Request" not in request.headers
+        or not request.headers["Hx-Request"] == "true"
+    ):
+        raise Http404
+    entity = get_object_or_404(Entity, id=pk)
+    if request.POST:
+        form = EntityDataForm(request.POST)
+        if form.is_valid():
+            form.instance.entity = entity
+            form.instance.save()
+            return HttpResponseRedirect(
+                reverse("djeocad:data_list", kwargs={"pk": entity.id})
+            )
 
 
 def csv_download(request, pk):

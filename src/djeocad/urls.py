@@ -3,8 +3,10 @@ from django.urls import path
 from .views import (
     DrawingDetailView,
     DrawingListView,
+    EntityDataListView,
     add_block_insertion,
     change_block_insertion,
+    create_entity_data,
     csv_download,
     delete_block_insertion,
     drawing_download,
@@ -17,6 +19,8 @@ urlpatterns = [
     path("<pk>/insertion", add_block_insertion, name="insertion_create"),
     path("insertion/<pk>/change", change_block_insertion, name="insertion_change"),
     path("insertion/<pk>/delete", delete_block_insertion, name="insertion_delete"),
+    path("insertion/<pk>/data-list", EntityDataListView.as_view(), name="data_list"),
+    path("insertion/<pk>/data-create", create_entity_data, name="data_create"),
     path(
         "<pk>/csv",
         csv_download,

@@ -1,3 +1,14 @@
+{% load i18n %}
+
+<hr>
+<form>
+  <button hx-post="{% url 'djeocad:data_create' pk=object.id %}"
+          hx-target="#entity-data"
+  >
+    {% trans "Add related data" %}
+  </button>
+  {{ data_form }}
+</form>
 {% if related_data %}
   <table>
     <tr>
@@ -7,10 +18,12 @@
       <th></th>
     </tr>
     {% for data in related_data %}
-      <td>{{ data.key }}</td>
-      <td>{{ data.value }}</td>
-      <td>Modify</td>
-      <td>Delete</td>
+      <tr>
+        <td>{{ data.key }}</td>
+        <td>{{ data.value }}</td>
+        <td>Modify</td>
+        <td>Delete</td>
+      </tr>
     {% endfor %}
   </table>
 {% endif %}

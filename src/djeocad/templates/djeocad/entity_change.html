@@ -27,7 +27,7 @@
   >
     {% trans "Delete insertion" %}
   </a>
-  <div id="entity_data">
+  <div id="entity-data" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     {% include "djeocad/htmx/entity_data_list.html" %}
   </div>
   <script id="marker_data" type="application/json">{{ object|geojsonfeature:":insertion"|safe }}</script>
