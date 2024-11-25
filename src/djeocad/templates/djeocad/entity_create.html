@@ -15,7 +15,7 @@
 {% endblock extra-head %}
 
 {% block content %}
-  <h4>{% trans "Add insertion to drawing" %}: {{ drawing.title }}</h4>
+  <h2>{% trans "Add insertion to drawing" %}: {{ drawing.title }}</h2>
   <form action="{% url 'djeocad:insertion_create' pk=drawing.id %}" method="post">
     {% csrf_token %}
     {{ form }}
