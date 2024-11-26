@@ -9,14 +9,18 @@
       <th>{% trans "Key" %}</th>
       <th>{% trans "Value" %}</th>
       <th></th>
-      <th></th>
     </tr>
     {% for data in related_data %}
       <tr>
         <td>{{ data.key }}</td>
         <td>{{ data.value }}</td>
-        <td>Modify</td>
-        <td>Delete</td>
+        <td>
+          <button hx-post="{% url 'djeocad:data_delete' pk=data.id %}"
+                  hx-target="#entity-data"
+          >
+            {% trans "Delete" %}
+          </button>
+        </td>
       </tr>
     {% endfor %}
   </table>

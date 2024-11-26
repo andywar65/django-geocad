@@ -237,6 +237,19 @@ def create_entity_data(request, pk):
             )
 
 
+@permission_required("djeocad.change_drawing")
+def delete_entity_data(request, pk):
+    if (
+        "Hx-Request" not in request.headers
+        or not request.headers["Hx-Request"] == "true"
+    ):
+        raise Http404
+    object = get_object_or_404(EntityData, id=pk)
+    entity = object.entity
+    object.delete()
+    return HttpResponseRedirect(reverse("djeocad:data_list", kwargs={"pk": entity.id}))
+
+
 def csv_download(request, pk):
     drawing = get_object_or_404(Drawing, id=pk)
     # Create the HttpResponse object with the appropriate CSV header.
