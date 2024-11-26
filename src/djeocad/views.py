@@ -137,14 +137,19 @@ def change_block_insertion(request, pk):
     if request.POST:
         form = EntityCreateForm(request.POST)
         if form.is_valid():
-            form.instance.insertion = {
+            object.layer = form.cleaned_data["layer"]
+            object.block = form.cleaned_data["block"]
+            object.rotation = form.cleaned_data["rotation"]
+            object.xscale = form.cleaned_data["xscale"]
+            object.yscale = form.cleaned_data["yscale"]
+            object.insertion = {
                 "type": "Point",
                 "coordinates": [
                     form.cleaned_data["long"],
                     form.cleaned_data["lat"],
                 ],
             }
-            form.instance.save()
+            object.save()
             return HttpResponseRedirect(
                 reverse("djeocad:drawing_detail", kwargs={"pk": drawing.id})
             )
