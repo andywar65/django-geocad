@@ -1,14 +1,8 @@
 {% load i18n %}
 
 <hr>
-<form>
-  <button hx-post="{% url 'djeocad:data_create' pk=object.id %}"
-          hx-target="#entity-data"
-  >
-    {% trans "Add related data" %}
-  </button>
-  {{ data_form }}
-</form>
+<h3>{% trans "Related data" %}</h3>
+
 {% if related_data %}
   <table>
     <tr>
@@ -26,4 +20,15 @@
       </tr>
     {% endfor %}
   </table>
+  <p>{% trans "Use the form below to add another" %}</p>
+{% else %}
+  <p>{% trans "No related data yet. Use the form below to add some" %}</p>
 {% endif %}
+<form>
+  {{ data_form }}
+  <button hx-post="{% url 'djeocad:data_create' pk=object.id %}"
+          hx-target="#entity-data"
+  >
+    {% trans "Add" %}
+  </button>
+</form>
