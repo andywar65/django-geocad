@@ -380,8 +380,8 @@ class GeoCADModelTest(TestCase):
         ent = Entity.objects.get(id=ent_data.entity.id)
         self.assertEqual(ent.popupContent["color"], one.color_field)
         self.assertEqual(ent.popupContent["layer"], f"Layer - {one.name}")
-        self.assertIn(f"<p>Layer: {one.name}</p>", ent.popupContent["content"])
-        self.assertIn(f"<li>ID = {ent.id}</li>", ent.popupContent["content"])
+        self.assertIn(f"<li>Layer: {one.name}</li>", ent.popupContent["content"])
+        self.assertIn(f"<p>ID = {ent.id}</p>", ent.popupContent["content"])
         self.assertIn(f"<li>Name = {ent_data.value}</li>", ent.popupContent["content"])
         ent_data = EntityData.objects.get(key="Surface", entity=ent)
         self.assertIn(
