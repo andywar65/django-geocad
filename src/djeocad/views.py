@@ -98,6 +98,10 @@ def add_block_insertion(request, pk):
                         form.cleaned_data["lat"],
                     ],
                 },
+                data={
+                    "processed": "true",
+                    "added": "true",
+                },
             )
             ent.save()
             return HttpResponseRedirect(

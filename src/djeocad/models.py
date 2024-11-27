@@ -664,8 +664,7 @@ class Entity(models.Model):
         }
 
     def save(self, *args, **kwargs):
-        if self.block:
-            # TODO use real dxf file
+        if "added" in self.data and self.block:
             # we will use a fake DXF to help us
             # prepare transformers
             world2utm, utm2world, utm_wcs, rot = (
@@ -719,7 +718,6 @@ class Entity(models.Model):
                 "geometries": geometries,
                 "type": "GeometryCollection",
             }
-            self.data["added"] = True
         super().save(*args, **kwargs)
         if self.block and not self.related_data.exists():
             first = Entity.objects.filter(block=self.block).first()
