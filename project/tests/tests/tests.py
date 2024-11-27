@@ -628,6 +628,11 @@ class GeoCADModelTest(TestCase):
             reverse("djeocad:insertion_create", kwargs={"pk": draw.id})
         )
         self.assertEqual(response.status_code, 200)
+        # test context
+        self.assertIn("form", response.context)
+        self.assertIn("lines", response.context)
+        self.assertIn("layer_list", response.context)
+        self.assertIn("drawing", response.context)
         # test template
         self.assertTemplateUsed(response, "djeocad/entity_create.html")
         # test wrong drawing id
@@ -637,6 +642,7 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(response.status_code, 404)
         layer = Layer.objects.get(drawing=draw, name="0")
         block = Layer.objects.filter(drawing=draw, is_block=True).last()
+        # check block name
         self.assertEqual(block.name, "block")
         before = Entity.objects.count()
         response = self.client.post(
@@ -652,8 +658,10 @@ class GeoCADModelTest(TestCase):
             },
             follow=True,
         )
+        # check Entity creation
         self.assertEqual(Entity.objects.count() - before, 1)
         ent = Entity.objects.last()
+        # check response resdirects
         self.assertRedirects(
             response,
             reverse("djeocad:insertion_change", kwargs={"pk": ent.id}),
