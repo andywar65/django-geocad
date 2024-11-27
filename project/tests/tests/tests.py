@@ -635,8 +635,28 @@ class GeoCADModelTest(TestCase):
             reverse("djeocad:insertion_create", kwargs={"pk": 99})
         )
         self.assertEqual(response.status_code, 404)
+        layer = Layer.objects.get(drawing=draw, name="0")
+        block = Layer.objects.filter(drawing=draw, is_block=True).last()
+        self.assertEqual(block.name, "block")
+        before = Entity.objects.count()
         response = self.client.post(
             reverse("djeocad:insertion_create", kwargs={"pk": draw.id}),
-            {},
+            {
+                "layer": layer.id,
+                "block": block.id,
+                "rotation": 0,
+                "xscale": 1,
+                "yscale": 1,
+                "lat": 42,
+                "long": 12,
+            },
             follow=True,
+        )
+        self.assertEqual(Entity.objects.count() - before, 1)
+        ent = Entity.objects.last()
+        self.assertRedirects(
+            response,
+            reverse("djeocad:insertion_change", kwargs={"pk": ent.id}),
+            status_code=302,
+            target_status_code=200,
         )
