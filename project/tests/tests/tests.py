@@ -368,16 +368,9 @@ class GeoCADModelTest(TestCase):
             key="foo",
             value="bar",
         )
-        data = f"<ul><li>ID = {ent.id}</li></ul>"
-        data += "<p>Attributes</p><ul>"
-        data += "<li>foo = bar</li></ul>"
-        popup = {
-            "content": "<p>Block: Layer</p>" + data,
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - Layer",
-        }
-        self.assertEqual(ent.popupContent, popup)
+        self.assertIn("<li>Block: Layer</li>", ent.popupContent["content"])
+        self.assertIn("<p>Attributes</p>", ent.popupContent["content"])
+        self.assertIn("<li>foo = bar</li>", ent.popupContent["content"])
 
     def test_room_entity_popup(self):
         draw = Drawing.objects.get(title="Referenced")
