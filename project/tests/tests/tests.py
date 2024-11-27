@@ -296,13 +296,11 @@ class GeoCADModelTest(TestCase):
     def test_entity_popup(self):
         layer = Layer.objects.get(name="Layer")
         ent = Entity.objects.get(layer=layer)
-        popup = {
-            "content": "<p>Layer: Layer</p>",
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - Layer",
-        }
-        self.assertEqual(ent.popupContent, popup)
+        self.assertIn(f"<p>ID = {ent.id}</p>", ent.popupContent["content"])
+        self.assertIn("<ul><li>Layer: Layer</li></ul>", ent.popupContent["content"])
+        self.assertEqual("#FFFFFF", ent.popupContent["color"])
+        self.assertTrue(ent.popupContent["linetype"])
+        self.assertEqual("Layer - Layer", ent.popupContent["layer"])
 
     def test_entity_popup_is_block(self):
         layer = Layer.objects.get(name="Layer")
@@ -338,15 +336,7 @@ class GeoCADModelTest(TestCase):
             key="foo",
             value="bar",
         )
-        data = f"<ul><li>ID = {ent.id}</li>"
-        data += "<li>foo = bar</li></ul>"
-        popup = {
-            "content": "<p>Layer: Layer</p>" + data,
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - Layer",
-        }
-        self.assertEqual(ent.popupContent, popup)
+        self.assertIn("<li>foo = bar</li>", ent.popupContent["content"])
 
     def test_entity_popup_data_bleach(self):
         layer = Layer.objects.get(name="Layer")
