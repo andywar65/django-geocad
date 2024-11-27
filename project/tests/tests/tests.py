@@ -275,6 +275,33 @@ class GeoCADModelTest(TestCase):
         ins_after = Entity.objects.exclude(block=None).count()
         self.assertTrue(ins_after - ins_before, 1)
 
+    def test_entity_save_method(self):
+        draw = Drawing.objects.get(title="Referenced")
+        layer = Layer.objects.get(drawing=draw, name="0")
+        block = Layer.objects.filter(drawing=draw, is_block=True).last()
+        self.assertEqual(block.name, "block")
+        ent = Entity.objects.create(
+            layer=layer,
+            block=block,
+            insertion={"type": "Point", "coordinates": [12.48, 42.00]},
+            data={
+                "processed": "true",
+                "added": "true",
+            },
+        )
+        self.assertIn("geometries", ent.geom)
+        ent_data = ent.related_data.all()
+        self.assertEqual(ent_data.count(), 1)
+        for ed in ent_data:
+            self.assertEqual(ed.key, "TAG")
+            self.assertEqual(ed.value, "Tag")
+        ent2 = Entity.objects.create(
+            layer=layer,
+            block=block,
+            insertion={"type": "Point", "coordinates": [12.48, 42.00]},
+        )
+        self.assertIsNone(ent2.geom)
+
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Unreferenced")
         popup = {
@@ -587,3 +614,29 @@ class GeoCADModelTest(TestCase):
         notref = Drawing.objects.get(title="Unreferenced")
         response = self.client.get(f"/admin/djeocad/drawing/{notref.id}/change/")
         self.assertEqual(response.status_code, 200)
+
+    def test_add_block_insertion_view(self):
+        # test unlogged user
+        draw = Drawing.objects.get(title="Referenced")
+        response = self.client.get(
+            reverse("djeocad:insertion_create", kwargs={"pk": draw.id})
+        )
+        self.assertEqual(response.status_code, 302)
+        # test logged user
+        self.client.login(username="boss", password="p4s5w0r6")
+        response = self.client.get(
+            reverse("djeocad:insertion_create", kwargs={"pk": draw.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        # test template
+        self.assertTemplateUsed(response, "djeocad/entity_create.html")
+        # test wrong drawing id
+        response = self.client.get(
+            reverse("djeocad:insertion_create", kwargs={"pk": 99})
+        )
+        self.assertEqual(response.status_code, 404)
+        response = self.client.post(
+            reverse("djeocad:insertion_create", kwargs={"pk": draw.id}),
+            {},
+            follow=True,
+        )
