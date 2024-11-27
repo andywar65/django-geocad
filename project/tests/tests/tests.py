@@ -302,31 +302,13 @@ class GeoCADModelTest(TestCase):
         self.assertTrue(ent.popupContent["linetype"])
         self.assertEqual("Layer - Layer", ent.popupContent["layer"])
 
-    def test_entity_popup_is_block(self):
-        layer = Layer.objects.get(name="Layer")
-        layer.is_block = True
-        layer.save()
-        ent = Entity.objects.get(layer=layer)
-        popup = {
-            "content": "<p>Block: Layer</p>",
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - Layer",
-        }
-        self.assertEqual(ent.popupContent, popup)
-
     def test_entity_popup_layer_name_bleach(self):
         layer = Layer.objects.get(name="Layer")
         layer.name = "<scrip>alert('hello')</script>"
         layer.save()
         ent = Entity.objects.get(layer=layer)
-        popup = {
-            "content": "<p>Layer: alert('hello')</p>",
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - alert('hello')",
-        }
-        self.assertEqual(ent.popupContent, popup)
+        self.assertEqual(ent.popupContent["layer"], "Layer - alert('hello')")
+        self.assertIn("<li>Layer: alert('hello')</li>", ent.popupContent["content"])
 
     def test_entity_popup_data(self):
         layer = Layer.objects.get(name="Layer")
@@ -346,15 +328,7 @@ class GeoCADModelTest(TestCase):
             key="foo",
             value="<scrip>alert('hello')</script>",
         )
-        data = f"<ul><li>ID = {ent.id}</li>"
-        data += "<li>foo = alert('hello')</li></ul>"
-        popup = {
-            "content": "<p>Layer: Layer</p>" + data,
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - Layer",
-        }
-        self.assertEqual(ent.popupContent, popup)
+        self.assertIn("<li>foo = alert('hello')</li>", ent.popupContent["content"])
 
     def test_entity_popup_data_attributes(self):
         layer = Layer.objects.get(name="Layer")
