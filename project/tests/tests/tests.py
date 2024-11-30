@@ -10,6 +10,7 @@ from django.urls import reverse
 from pyproj import Transformer
 
 from djeocad.models import Drawing, Entity, EntityData, Layer, cad2hex
+from djeocad.views import EntityCreateForm
 
 
 @override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT).joinpath("tests"))
@@ -661,10 +662,75 @@ class GeoCADModelTest(TestCase):
         # check Entity creation
         self.assertEqual(Entity.objects.count() - before, 1)
         ent = Entity.objects.last()
-        # check response resdirects
+        # check response redirects
         self.assertRedirects(
             response,
             reverse("djeocad:insertion_change", kwargs={"pk": ent.id}),
             status_code=302,
             target_status_code=200,
         )
+
+    def test_change_block_insertion_view(self):
+        # test unlogged user
+        ent = Entity.objects.exclude(block=None).last()
+        response = self.client.get(
+            reverse("djeocad:insertion_change", kwargs={"pk": ent.id})
+        )
+        self.assertEqual(response.status_code, 302)
+        # test logged user
+        self.client.login(username="boss", password="p4s5w0r6")
+        response = self.client.get(
+            reverse("djeocad:insertion_change", kwargs={"pk": ent.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        # test context
+        self.assertIn("form", response.context)
+        self.assertIn("lines", response.context)
+        self.assertIn("layer_list", response.context)
+        self.assertIn("drawing", response.context)
+        self.assertIn("object", response.context)
+        self.assertIn("related_data", response.context)
+        self.assertIn("data_form", response.context)
+        # test template
+        self.assertTemplateUsed(response, "djeocad/entity_change.html")
+        # test wrong entity id
+        response = self.client.get(
+            reverse("djeocad:insertion_change", kwargs={"pk": 99})
+        )
+        self.assertEqual(response.status_code, 404)
+        response = self.client.post(
+            reverse("djeocad:insertion_change", kwargs={"pk": ent.id}),
+            {
+                "layer": ent.layer.id,
+                "block": ent.block.id,
+                "rotation": 0,
+                "xscale": 1,
+                "yscale": 1,
+                "lat": 42,
+                "long": 12,
+            },
+            follow=True,
+        )
+        # check response redirects
+        self.assertRedirects(
+            response,
+            reverse("djeocad:drawing_detail", kwargs={"pk": ent.layer.drawing.id}),
+            status_code=302,
+            target_status_code=200,
+        )
+
+    def test_entity_create_form(self):
+        ent = Entity.objects.exclude(block=None).last()
+        form = EntityCreateForm(
+            data={
+                "layer": ent.layer.id,
+                "block": ent.block.id,
+                "rotation": 0,
+                "xscale": 1,
+                "yscale": 1,
+                "lat": 142,
+                "long": 212,
+            }
+        )
+        self.assertEqual(form.errors["lat"], ["Invalid value"])
+        self.assertEqual(form.errors["long"], ["Invalid value"])
