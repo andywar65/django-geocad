@@ -734,3 +734,30 @@ class GeoCADModelTest(TestCase):
         )
         self.assertEqual(form.errors["lat"], ["Invalid value"])
         self.assertEqual(form.errors["long"], ["Invalid value"])
+
+    def test_delete_block_insertion_logging(self):
+        # test unlogged user
+        ent = Entity.objects.exclude(block=None).last()
+        response = self.client.get(
+            reverse("djeocad:insertion_delete", kwargs={"pk": ent.id})
+        )
+        self.assertEqual(response.status_code, 302)
+        # test logged user
+        self.client.login(username="boss", password="p4s5w0r6")
+        response = self.client.get(
+            reverse("djeocad:insertion_delete", kwargs={"pk": ent.id}), follow=True
+        )
+        # check response redirects
+        self.assertRedirects(
+            response,
+            reverse("djeocad:drawing_detail", kwargs={"pk": ent.layer.drawing.id}),
+            status_code=302,
+            target_status_code=200,
+        )
+        # check entity deleted
+        self.assertFalse(Entity.objects.filter(id=ent.id).exists())
+        # test wrong entity id
+        response = self.client.get(
+            reverse("djeocad:insertion_delete", kwargs={"pk": 99})
+        )
+        self.assertEqual(response.status_code, 404)
