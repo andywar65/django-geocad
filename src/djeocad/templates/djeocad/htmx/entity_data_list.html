@@ -1,0 +1,38 @@
+{% load i18n %}
+
+<hr>
+<h3>{% trans "Related data" %}</h3>
+
+{% if related_data %}
+  <table>
+    <tr>
+      <th>{% trans "Key" %}</th>
+      <th>{% trans "Value" %}</th>
+      <th></th>
+    </tr>
+    {% for data in related_data %}
+      <tr>
+        <td>{{ data.key }}</td>
+        <td>{{ data.value }}</td>
+        <td>
+          <button hx-post="{% url 'djeocad:data_delete' pk=data.id %}"
+                  hx-target="#entity-data"
+          >
+            {% trans "Delete" %}
+          </button>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+  <p>{% trans "Use the form below to add another" %}</p>
+{% else %}
+  <p>{% trans "No related data yet. Use the form below to add some" %}</p>
+{% endif %}
+<form>
+  {{ data_form }}
+  <button hx-post="{% url 'djeocad:data_create' pk=object.id %}"
+          hx-target="#entity-data"
+  >
+    {% trans "Add" %}
+  </button>
+</form>

@@ -1,0 +1,45 @@
+{% load static %}
+{% load i18n %}
+{% load leaflet_tags %}
+{% load geojson_tags %}
+
+<details>
+  <summary style="font-size: 1.875em;">{% trans "Drawing" %}: {{ object.title }}</summary>
+  <ul>
+    {% if perms.djeocad.change_drawing %}
+      <li>
+        <a href="/admin/djeocad/drawing/{{ object.id }}/change/">
+          {% trans "Modify" %}
+        </a>
+      </li>
+      {% if blocks %}
+        <li>
+          <a href="{% url 'djeocad:insertion_create' pk=object.id %}">
+            {% trans "Add insertions" %}
+          </a>
+        </li>
+      {% endif %}
+    {% endif %}
+    <li>
+      <a href="{% url 'djeocad:drawing_download' pk=object.id %}">
+        {% trans "Download DXF with Geodata" %}
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'djeocad:drawing_csv' pk=object.id %}">
+        {% trans "Download CSV of entities" %}
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'djeocad:drawing_list' %}">
+        {% trans "Back to list" %}
+      </a>
+    </li>
+  </ul>
+</details>
+<script id="marker_data" type="application/json">{{ object|geojsonfeature:"popupContent"|safe }}</script>
+{% include "djeocad/map_data.html" %}
+<script src="{% static 'djeocad/js/map_script.js'%}"></script>
+<div>
+  {% leaflet_map "mymap" callback="window.map_init" %}
+</div>

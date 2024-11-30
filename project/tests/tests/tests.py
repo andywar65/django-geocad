@@ -10,6 +10,7 @@ from django.urls import reverse
 from pyproj import Transformer
 
 from djeocad.models import Drawing, Entity, EntityData, Layer, cad2hex
+from djeocad.views import EntityCreateForm
 
 
 @override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT).joinpath("tests"))
@@ -275,6 +276,33 @@ class GeoCADModelTest(TestCase):
         ins_after = Entity.objects.exclude(block=None).count()
         self.assertTrue(ins_after - ins_before, 1)
 
+    def test_entity_save_method(self):
+        draw = Drawing.objects.get(title="Referenced")
+        layer = Layer.objects.get(drawing=draw, name="0")
+        block = Layer.objects.filter(drawing=draw, is_block=True).last()
+        self.assertEqual(block.name, "block")
+        ent = Entity.objects.create(
+            layer=layer,
+            block=block,
+            insertion={"type": "Point", "coordinates": [12.48, 42.00]},
+            data={
+                "processed": "true",
+                "added": "true",
+            },
+        )
+        self.assertIn("geometries", ent.geom)
+        ent_data = ent.related_data.all()
+        self.assertEqual(ent_data.count(), 1)
+        for ed in ent_data:
+            self.assertEqual(ed.key, "TAG")
+            self.assertEqual(ed.value, "Tag")
+        ent2 = Entity.objects.create(
+            layer=layer,
+            block=block,
+            insertion={"type": "Point", "coordinates": [12.48, 42.00]},
+        )
+        self.assertIsNone(ent2.geom)
+
     def test_drawing_popup(self):
         draw = Drawing.objects.get(title="Unreferenced")
         popup = {
@@ -296,39 +324,19 @@ class GeoCADModelTest(TestCase):
     def test_entity_popup(self):
         layer = Layer.objects.get(name="Layer")
         ent = Entity.objects.get(layer=layer)
-        popup = {
-            "content": "<p>Layer: Layer</p>",
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - Layer",
-        }
-        self.assertEqual(ent.popupContent, popup)
-
-    def test_entity_popup_is_block(self):
-        layer = Layer.objects.get(name="Layer")
-        layer.is_block = True
-        layer.save()
-        ent = Entity.objects.get(layer=layer)
-        popup = {
-            "content": "<p>Block: Layer</p>",
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - Layer",
-        }
-        self.assertEqual(ent.popupContent, popup)
+        self.assertIn(f"<p>ID = {ent.id}</p>", ent.popupContent["content"])
+        self.assertIn("<ul><li>Layer: Layer</li></ul>", ent.popupContent["content"])
+        self.assertEqual("#FFFFFF", ent.popupContent["color"])
+        self.assertTrue(ent.popupContent["linetype"])
+        self.assertEqual("Layer - Layer", ent.popupContent["layer"])
 
     def test_entity_popup_layer_name_bleach(self):
         layer = Layer.objects.get(name="Layer")
         layer.name = "<scrip>alert('hello')</script>"
         layer.save()
         ent = Entity.objects.get(layer=layer)
-        popup = {
-            "content": "<p>Layer: alert('hello')</p>",
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - alert('hello')",
-        }
-        self.assertEqual(ent.popupContent, popup)
+        self.assertEqual(ent.popupContent["layer"], "Layer - alert('hello')")
+        self.assertIn("<li>Layer: alert('hello')</li>", ent.popupContent["content"])
 
     def test_entity_popup_data(self):
         layer = Layer.objects.get(name="Layer")
@@ -338,15 +346,7 @@ class GeoCADModelTest(TestCase):
             key="foo",
             value="bar",
         )
-        data = f"<ul><li>ID = {ent.id}</li>"
-        data += "<li>foo = bar</li></ul>"
-        popup = {
-            "content": "<p>Layer: Layer</p>" + data,
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - Layer",
-        }
-        self.assertEqual(ent.popupContent, popup)
+        self.assertIn("<li>foo = bar</li>", ent.popupContent["content"])
 
     def test_entity_popup_data_bleach(self):
         layer = Layer.objects.get(name="Layer")
@@ -356,15 +356,7 @@ class GeoCADModelTest(TestCase):
             key="foo",
             value="<scrip>alert('hello')</script>",
         )
-        data = f"<ul><li>ID = {ent.id}</li>"
-        data += "<li>foo = alert('hello')</li></ul>"
-        popup = {
-            "content": "<p>Layer: Layer</p>" + data,
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - Layer",
-        }
-        self.assertEqual(ent.popupContent, popup)
+        self.assertIn("<li>foo = alert('hello')</li>", ent.popupContent["content"])
 
     def test_entity_popup_data_attributes(self):
         layer = Layer.objects.get(name="Layer")
@@ -378,16 +370,9 @@ class GeoCADModelTest(TestCase):
             key="foo",
             value="bar",
         )
-        data = f"<ul><li>ID = {ent.id}</li></ul>"
-        data += "<p>Attributes</p><ul>"
-        data += "<li>foo = bar</li></ul>"
-        popup = {
-            "content": "<p>Block: Layer</p>" + data,
-            "color": "#FFFFFF",
-            "linetype": True,
-            "layer": "Layer - Layer",
-        }
-        self.assertEqual(ent.popupContent, popup)
+        self.assertIn("<li>Block: Layer</li>", ent.popupContent["content"])
+        self.assertIn("<p>Attributes</p>", ent.popupContent["content"])
+        self.assertIn("<li>foo = bar</li>", ent.popupContent["content"])
 
     def test_room_entity_popup(self):
         draw = Drawing.objects.get(title="Referenced")
@@ -397,8 +382,8 @@ class GeoCADModelTest(TestCase):
         ent = Entity.objects.get(id=ent_data.entity.id)
         self.assertEqual(ent.popupContent["color"], one.color_field)
         self.assertEqual(ent.popupContent["layer"], f"Layer - {one.name}")
-        self.assertIn(f"<p>Layer: {one.name}</p>", ent.popupContent["content"])
-        self.assertIn(f"<li>ID = {ent.id}</li>", ent.popupContent["content"])
+        self.assertIn(f"<li>Layer: {one.name}</li>", ent.popupContent["content"])
+        self.assertIn(f"<p>ID = {ent.id}</p>", ent.popupContent["content"])
         self.assertIn(f"<li>Name = {ent_data.value}</li>", ent.popupContent["content"])
         ent_data = EntityData.objects.get(key="Surface", entity=ent)
         self.assertIn(
@@ -630,3 +615,251 @@ class GeoCADModelTest(TestCase):
         notref = Drawing.objects.get(title="Unreferenced")
         response = self.client.get(f"/admin/djeocad/drawing/{notref.id}/change/")
         self.assertEqual(response.status_code, 200)
+
+    def test_add_block_insertion_view(self):
+        # test unlogged user
+        draw = Drawing.objects.get(title="Referenced")
+        response = self.client.get(
+            reverse("djeocad:insertion_create", kwargs={"pk": draw.id})
+        )
+        self.assertEqual(response.status_code, 302)
+        # test logged user
+        self.client.login(username="boss", password="p4s5w0r6")
+        response = self.client.get(
+            reverse("djeocad:insertion_create", kwargs={"pk": draw.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        # test context
+        self.assertIn("form", response.context)
+        self.assertIn("lines", response.context)
+        self.assertIn("layer_list", response.context)
+        self.assertIn("drawing", response.context)
+        # test template
+        self.assertTemplateUsed(response, "djeocad/entity_create.html")
+        # test wrong drawing id
+        response = self.client.get(
+            reverse("djeocad:insertion_create", kwargs={"pk": 99})
+        )
+        self.assertEqual(response.status_code, 404)
+        layer = Layer.objects.get(drawing=draw, name="0")
+        block = Layer.objects.filter(drawing=draw, is_block=True).last()
+        # check block name
+        self.assertEqual(block.name, "block")
+        before = Entity.objects.count()
+        response = self.client.post(
+            reverse("djeocad:insertion_create", kwargs={"pk": draw.id}),
+            {
+                "layer": layer.id,
+                "block": block.id,
+                "rotation": 0,
+                "xscale": 1,
+                "yscale": 1,
+                "lat": 42,
+                "long": 12,
+            },
+            follow=True,
+        )
+        # check Entity creation
+        self.assertEqual(Entity.objects.count() - before, 1)
+        ent = Entity.objects.last()
+        # check response redirects
+        self.assertRedirects(
+            response,
+            reverse("djeocad:insertion_change", kwargs={"pk": ent.id}),
+            status_code=302,
+            target_status_code=200,
+        )
+
+    def test_change_block_insertion_view(self):
+        # test unlogged user
+        ent = Entity.objects.exclude(block=None).last()
+        response = self.client.get(
+            reverse("djeocad:insertion_change", kwargs={"pk": ent.id})
+        )
+        self.assertEqual(response.status_code, 302)
+        # test logged user
+        self.client.login(username="boss", password="p4s5w0r6")
+        response = self.client.get(
+            reverse("djeocad:insertion_change", kwargs={"pk": ent.id})
+        )
+        self.assertEqual(response.status_code, 200)
+        # test context
+        self.assertIn("form", response.context)
+        self.assertIn("lines", response.context)
+        self.assertIn("layer_list", response.context)
+        self.assertIn("drawing", response.context)
+        self.assertIn("object", response.context)
+        self.assertIn("related_data", response.context)
+        self.assertIn("data_form", response.context)
+        # test template
+        self.assertTemplateUsed(response, "djeocad/entity_change.html")
+        # test wrong entity id
+        response = self.client.get(
+            reverse("djeocad:insertion_change", kwargs={"pk": 99})
+        )
+        self.assertEqual(response.status_code, 404)
+        response = self.client.post(
+            reverse("djeocad:insertion_change", kwargs={"pk": ent.id}),
+            {
+                "layer": ent.layer.id,
+                "block": ent.block.id,
+                "rotation": 0,
+                "xscale": 1,
+                "yscale": 1,
+                "lat": 42,
+                "long": 12,
+            },
+            follow=True,
+        )
+        # check response redirects
+        self.assertRedirects(
+            response,
+            reverse("djeocad:drawing_detail", kwargs={"pk": ent.layer.drawing.id}),
+            status_code=302,
+            target_status_code=200,
+        )
+
+    def test_entity_create_form(self):
+        ent = Entity.objects.exclude(block=None).last()
+        form = EntityCreateForm(
+            data={
+                "layer": ent.layer.id,
+                "block": ent.block.id,
+                "rotation": 0,
+                "xscale": 1,
+                "yscale": 1,
+                "lat": 142,
+                "long": 212,
+            }
+        )
+        self.assertEqual(form.errors["lat"], ["Invalid value"])
+        self.assertEqual(form.errors["long"], ["Invalid value"])
+
+    def test_delete_block_insertion(self):
+        # test unlogged user
+        ent = Entity.objects.exclude(block=None).last()
+        response = self.client.get(
+            reverse("djeocad:insertion_delete", kwargs={"pk": ent.id})
+        )
+        self.assertEqual(response.status_code, 302)
+        # test logged user
+        self.client.login(username="boss", password="p4s5w0r6")
+        response = self.client.get(
+            reverse("djeocad:insertion_delete", kwargs={"pk": ent.id}), follow=True
+        )
+        # check response redirects
+        self.assertRedirects(
+            response,
+            reverse("djeocad:drawing_detail", kwargs={"pk": ent.layer.drawing.id}),
+            status_code=302,
+            target_status_code=200,
+        )
+        # check entity deleted
+        self.assertFalse(Entity.objects.filter(id=ent.id).exists())
+        # test wrong entity id
+        response = self.client.get(
+            reverse("djeocad:insertion_delete", kwargs={"pk": 99})
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_create_entity_data(self):
+        # test unlogged user
+        ent = Entity.objects.exclude(block=None).last()
+        response = self.client.get(
+            reverse("djeocad:data_create", kwargs={"pk": ent.id})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.client.login(username="boss", password="p4s5w0r6")
+        # test logged user without htmx headers
+        response = self.client.post(
+            reverse("djeocad:data_create", kwargs={"pk": ent.id}),
+            {"key": "Foo", "value": "Bar"},
+        )
+        self.assertEqual(response.status_code, 404)
+        # test logged user with htmx headers
+        response = self.client.post(
+            reverse("djeocad:data_create", kwargs={"pk": ent.id}),
+            {"key": "Foobinabi", "value": "Bar"},
+            headers={"Hx-Request": "true"},
+            follow=True,
+        )
+        # check response redirects
+        self.assertRedirects(
+            response,
+            reverse("djeocad:data_list", kwargs={"pk": ent.id}),
+            status_code=302,
+            target_status_code=200,
+        )
+        # check entity data creation
+        self.assertTrue(EntityData.objects.filter(entity=ent, key="Foobinabi").exists())
+        # test wrong entity id
+        response = self.client.post(
+            reverse("djeocad:data_create", kwargs={"pk": 99}),
+            {"key": "Foobinabi", "value": "Bar"},
+            headers={"Hx-Request": "true"},
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_entity_data(self):
+        ent = Entity.objects.exclude(block=None).last()
+        ent_data = EntityData.objects.create(
+            entity=ent,
+            key="Foodelenda",
+            value="Bar",
+        )
+        # test no permissions
+        response = self.client.get(
+            reverse("djeocad:data_delete", kwargs={"pk": ent_data.id}),
+            headers={"Hx-Request": "true"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.client.login(username="boss", password="p4s5w0r6")
+        # test wrong entity id
+        response = self.client.get(
+            reverse("djeocad:data_delete", kwargs={"pk": 99}),
+            headers={"Hx-Request": "true"},
+        )
+        self.assertEqual(response.status_code, 404)
+        # test no headers
+        response = self.client.get(
+            reverse("djeocad:data_delete", kwargs={"pk": ent_data.id}),
+        )
+        self.assertEqual(response.status_code, 404)
+        response = self.client.get(
+            reverse("djeocad:data_delete", kwargs={"pk": ent_data.id}),
+            headers={"Hx-Request": "true"},
+            follow=True,
+        )
+        # check response redirects
+        self.assertRedirects(
+            response,
+            reverse("djeocad:data_list", kwargs={"pk": ent.id}),
+            status_code=302,
+            target_status_code=200,
+        )
+        # check entity data creation
+        self.assertFalse(
+            EntityData.objects.filter(entity=ent, key="Foodelenda").exists()
+        )
+
+    def test_list_entity_data(self):
+        ent = Entity.objects.exclude(block=None).last()
+        EntityData.objects.create(
+            entity=ent,
+            key="Foolist",
+            value="Bar",
+        )
+        response = self.client.get(
+            reverse("djeocad:data_list", kwargs={"pk": ent.id}),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "djeocad/htmx/entity_data_list.html")
+        self.assertTrue("object" in response.context)
+        self.assertTrue("data_form" in response.context)
+        self.assertTrue("related_data" in response.context)
+        self.assertEqual(response.context["related_data"].count(), 1)
+        # test wrong entity
+        response = self.client.get(
+            reverse("djeocad:data_list", kwargs={"pk": 99}),
+        )
+        self.assertEqual(response.status_code, 404)

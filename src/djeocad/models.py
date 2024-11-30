@@ -589,6 +589,9 @@ class Layer(models.Model):
         verbose_name_plural = _("Layers")
         ordering = ("name",)
 
+    def __str__(self):
+        return self.name
+
 
 def get_default_entity_data():
     return {"processed": "true"}
@@ -604,12 +607,15 @@ class Entity(models.Model):
     data = models.JSONField(
         default=get_default_entity_data,
     )
-    geom = GeometryCollectionField()
+    geom = GeometryCollectionField(
+        null=True,
+    )
     block = models.ForeignKey(
         Layer,
         on_delete=models.CASCADE,
         related_name="related_insertions",
         null=True,
+        blank=False,
     )
     insertion = PointField(
         null=True,
@@ -633,29 +639,96 @@ class Entity(models.Model):
 
     @property
     def popupContent(self):
-        if self.layer.is_block:
+        title_str = f"<p>ID = {self.id}</p>"
+        ltype = _("Layer")
+        title_str += f"<ul><li>{ltype}: {nh3.clean(self.layer.name)}</li>"
+        if self.block:
             ltype = _("Block")
-        else:
-            ltype = _("Layer")
-        title_str = f"<p>{ltype}: {nh3.clean(self.layer.name)}</p>"
+            title_str += f"<li>{ltype}: {nh3.clean(self.block.name)}</li>"
         data = ""
         ent_data = self.related_data.all()
         if ent_data.exists():
-            data = f"<ul><li>ID = {self.id}</li>"
-            if self.layer.is_block:
+            if self.block:
                 data += "</ul><p>Attributes</p><ul>"
                 for ed in ent_data:
                     data += f"<li>{nh3.clean(ed.key)} = {nh3.clean(ed.value)}</li>"
             else:
                 for ed in ent_data:
                     data += f"<li>{nh3.clean(ed.key)} = {nh3.clean(ed.value)}</li>"
-            data += "</ul>"
+        data += "</ul>"
         return {
             "content": title_str + data,
             "color": self.layer.color_field,
             "linetype": self.layer.linetype,
             "layer": _("Layer - ") + nh3.clean(self.layer.name),
         }
+
+    def save(self, *args, **kwargs):
+        if "added" in self.data and self.block:
+            # we will use a fake DXF to help us
+            # prepare transformers
+            world2utm, utm2world, utm_wcs, rot = (
+                self.block.drawing.prepare_transformers()
+            )
+            # start fake DXF
+            doc = ezdxf.new()
+            msp = doc.modelspace()
+            # we fake geodata
+            geodata = msp.new_geodata()
+            geodata = self.block.drawing.fake_geodata(geodata, utm_wcs, rot)
+            # get transform matrix from fake geodata
+            m, epsg = geodata.get_crs_transformation(no_checks=True)  # noqa
+            # add block to fake DXF
+            block = doc.blocks.new(name=self.block.name)
+            geometries = self.block.geom["geometries"]
+            for geom in geometries:
+                geo_proxy = geo.GeoProxy.parse(geom)
+                geo_proxy.apply(
+                    lambda v: ezdxf.math.Vec3(world2utm.transform(v.x, v.y))
+                )
+                geo_proxy.crs_to_wcs(m)
+                for entity in geo_proxy.to_dxf_entities(dxfattribs={"layer": "0"}):
+                    block.add_entity(entity)
+            geo_proxy = geo.GeoProxy.parse(self.insertion)
+            geo_proxy.apply(lambda v: ezdxf.math.Vec3(world2utm.transform(v.x, v.y)))
+            geo_proxy.crs_to_wcs(m)
+            for entity in geo_proxy.to_dxf_entities():
+                point = entity.dxf.location
+            instance = msp.add_blockref(
+                self.block.name,
+                point,
+                dxfattribs={
+                    "xscale": self.xscale,
+                    "yscale": self.yscale,
+                    "rotation": self.rotation,
+                    "layer": self.layer.name,
+                },
+            )
+            # use fake instance to generate new geometries
+            geometries = []
+            # 'generator' object has no attribute 'query'
+            for e in instance.virtual_entities():
+                if e.dxftype() in self.block.drawing.entity_types:
+                    # extract entity
+                    geo_proxy = get_geo_proxy(e, m, utm2world)
+                    if geo_proxy:
+                        geometries.append(geo_proxy.__geo_interface__)
+            # update Insertion
+            self.geom = {
+                "geometries": geometries,
+                "type": "GeometryCollection",
+            }
+        super().save(*args, **kwargs)
+        if self.block and not self.related_data.exists():
+            first = Entity.objects.filter(block=self.block).first()
+            data = first.related_data.all()
+            if data.exists():
+                for d in data:
+                    EntityData.objects.create(
+                        entity=self,
+                        key=d.key,
+                        value=d.value,
+                    )
 
 
 class EntityData(models.Model):

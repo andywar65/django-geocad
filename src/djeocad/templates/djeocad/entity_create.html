@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+{% load leaflet_tags %}
+{% load geojson_tags %}
+
+{% block extra-head %}
+  {% leaflet_js %}
+  {% leaflet_css %}
+  <style>
+    .leaflet-container {  /* all maps */
+      height: 600px;
+    }
+  </style>
+{% endblock extra-head %}
+
+{% block content %}
+  <h2>{% trans "Add insertion to drawing" %}: {{ drawing.title }}</h2>
+  <form action="{% url 'djeocad:insertion_create' pk=drawing.id %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <p>{% trans "Click on the map below to change coordinates" %}</p>
+    <input type="submit" value="Submit">
+  </form>
+  <script id="marker_data" type="application/json">{{ drawing|geojsonfeature|safe }}</script>
+  {% include "djeocad/map_data.html" %}
+  <script id="line_data" type="application/json">{{ lines|geojsonfeature|safe }}</script>
+  {{ layer_list|json_script:"layer_data" }}
+  <script src="{% static 'djeocad/js/change_script.js'%}"></script>
+  <div>
+    {% leaflet_map "mymap" callback="window.map_init" %}
+  </div>
+{% endblock content %}

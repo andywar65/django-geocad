@@ -1,11 +1,5 @@
 function map_init(map, options) {
 
-    function onEachFeature(feature, layer) {
-      if (feature.properties && feature.properties.popupContent) {
-        layer.bindPopup(feature.properties.popupContent.content, {minWidth: 256});
-      }
-    }
-
     function setLineStyle(feature) {
       if (feature.properties.popupContent.linetype) {
         return {"color": feature.properties.popupContent.color, "weight": 3 };
@@ -35,7 +29,7 @@ function map_init(map, options) {
       collection = JSON.parse(document.getElementById("marker_data").textContent);
       for (marker of collection.features) {
         // let author = marker.properties.popupContent.layer
-        L.geoJson(marker, {onEachFeature: onEachFeature}).addTo(marker_layer);
+        L.geoJson(marker).addTo(marker_layer);
       }
       // fit bounds
       map.fitBounds(L.geoJson(collection).getBounds(), {padding: [30,30]});
@@ -43,7 +37,7 @@ function map_init(map, options) {
       if (collection !== null) {
         for (line of collection.features) {
           let name = line.properties.popupContent.layer
-          L.geoJson(line, {style: setLineStyle, onEachFeature: onEachFeature}).addTo(window[name]);
+          L.geoJson(line, {style: setLineStyle}).addTo(window[name]);
         }
       }
     }
