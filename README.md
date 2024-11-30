@@ -41,6 +41,11 @@ CAD_LAYER_BLACKLIST = [...]
 CAD_BLOCK_BLACKLIST = [...]
 ```
 Here you can store names of layers and blocks you don't want to be processed.
+At last run the following management commands:
+```
+python manage.py migrate
+python manage.py collectstatic
+```
 ### Templates
 You also need a `base.html` template with following template blocks (a sample `base.html` is provided among package templates).
 ```
@@ -50,12 +55,12 @@ You also need a `base.html` template with following template blocks (a sample `b
 {% block content %}
 {% endblock content %}
 ```
-Package comes with several templates in the `djeocad/templates/` directory. All templates have no styles. If you want to add your own styles, copy the templates in a `<my_project>/templates/djeocad/` directory and override them. You will have to set:
+Package comes with several templates in the `djeocad/templates/` directory. All templates have no styles. If you want to add your own styles, copy the templates in a `my_project/templates/djeocad/` directory and override them. You will have to set:
 ```python
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "<my_project>/templates"],
+        "DIRS": [BASE_DIR / "my_project/templates"],
         ...
     },
 ]
