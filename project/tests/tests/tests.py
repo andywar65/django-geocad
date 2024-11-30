@@ -735,7 +735,7 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(form.errors["lat"], ["Invalid value"])
         self.assertEqual(form.errors["long"], ["Invalid value"])
 
-    def test_delete_block_insertion_logging(self):
+    def test_delete_block_insertion(self):
         # test unlogged user
         ent = Entity.objects.exclude(block=None).last()
         response = self.client.get(
@@ -759,5 +759,43 @@ class GeoCADModelTest(TestCase):
         # test wrong entity id
         response = self.client.get(
             reverse("djeocad:insertion_delete", kwargs={"pk": 99})
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_create_entity_data(self):
+        # test unlogged user
+        ent = Entity.objects.exclude(block=None).last()
+        response = self.client.get(
+            reverse("djeocad:data_create", kwargs={"pk": ent.id})
+        )
+        self.assertEqual(response.status_code, 302)
+        self.client.login(username="boss", password="p4s5w0r6")
+        # test logged user without htmx headers
+        response = self.client.post(
+            reverse("djeocad:data_create", kwargs={"pk": ent.id}),
+            {"key": "Foo", "value": "Bar"},
+        )
+        self.assertEqual(response.status_code, 404)
+        # test logged user with htmx headers
+        response = self.client.post(
+            reverse("djeocad:data_create", kwargs={"pk": ent.id}),
+            {"key": "Foobinabi", "value": "Bar"},
+            headers={"Hx-Request": "true"},
+            follow=True,
+        )
+        # check response redirects
+        self.assertRedirects(
+            response,
+            reverse("djeocad:data_list", kwargs={"pk": ent.id}),
+            status_code=302,
+            target_status_code=200,
+        )
+        # check entity data creation
+        self.assertTrue(EntityData.objects.filter(entity=ent, key="Foobinabi").exists())
+        # test wrong entity id
+        response = self.client.post(
+            reverse("djeocad:data_create", kwargs={"pk": 99}),
+            {"key": "Foobinabi", "value": "Bar"},
+            headers={"Hx-Request": "true"},
         )
         self.assertEqual(response.status_code, 404)
