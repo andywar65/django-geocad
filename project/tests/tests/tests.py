@@ -841,3 +841,25 @@ class GeoCADModelTest(TestCase):
         self.assertFalse(
             EntityData.objects.filter(entity=ent, key="Foodelenda").exists()
         )
+
+    def test_list_entity_data(self):
+        ent = Entity.objects.exclude(block=None).last()
+        EntityData.objects.create(
+            entity=ent,
+            key="Foolist",
+            value="Bar",
+        )
+        response = self.client.get(
+            reverse("djeocad:data_list", kwargs={"pk": ent.id}),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "djeocad/htmx/entity_data_list.html")
+        self.assertTrue("object" in response.context)
+        self.assertTrue("data_form" in response.context)
+        self.assertTrue("related_data" in response.context)
+        self.assertEqual(response.context["related_data"].count(), 1)
+        # test wrong entity
+        response = self.client.get(
+            reverse("djeocad:data_list", kwargs={"pk": 99}),
+        )
+        self.assertEqual(response.status_code, 404)
