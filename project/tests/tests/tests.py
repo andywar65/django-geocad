@@ -799,3 +799,45 @@ class GeoCADModelTest(TestCase):
             headers={"Hx-Request": "true"},
         )
         self.assertEqual(response.status_code, 404)
+
+    def test_delete_entity_data(self):
+        ent = Entity.objects.exclude(block=None).last()
+        ent_data = EntityData.objects.create(
+            entity=ent,
+            key="Foodelenda",
+            value="Bar",
+        )
+        # test no permissions
+        response = self.client.get(
+            reverse("djeocad:data_delete", kwargs={"pk": ent_data.id}),
+            headers={"Hx-Request": "true"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.client.login(username="boss", password="p4s5w0r6")
+        # test wrong entity id
+        response = self.client.get(
+            reverse("djeocad:data_delete", kwargs={"pk": 99}),
+            headers={"Hx-Request": "true"},
+        )
+        self.assertEqual(response.status_code, 404)
+        # test no headers
+        response = self.client.get(
+            reverse("djeocad:data_delete", kwargs={"pk": ent_data.id}),
+        )
+        self.assertEqual(response.status_code, 404)
+        response = self.client.get(
+            reverse("djeocad:data_delete", kwargs={"pk": ent_data.id}),
+            headers={"Hx-Request": "true"},
+            follow=True,
+        )
+        # check response redirects
+        self.assertRedirects(
+            response,
+            reverse("djeocad:data_list", kwargs={"pk": ent.id}),
+            status_code=302,
+            target_status_code=200,
+        )
+        # check entity data creation
+        self.assertFalse(
+            EntityData.objects.filter(entity=ent, key="Foodelenda").exists()
+        )
