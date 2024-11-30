@@ -1,11 +1,1 @@
-django>=5.1,<6.0
-psycopg[binary,pool]
-environs[django]
-django-leaflet
-django-geojson
-ezdxf
-django-colorfield
-pyproj
-shapely
-nh3
-easy-thumbnails
+-e ../django-geocad[test]
