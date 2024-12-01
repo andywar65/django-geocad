@@ -3,7 +3,7 @@ Django app that imports CAD drawings in Leaflet maps
 ## Overview
 Show CAD drawings in interactive web maps, download previously uploaded files with geo location, download CSV files with extracted data.
 ## Requirements
-This app is tested on Django 5.1.1 and Python 3.12. It heavily relies on outstanding [ezdxf](https://ezdxf.mozman.at/) for handling DXF files, [pyproj](https://pyproj4.github.io/pyproj/stable/) for geographic projections, [shapely](https://shapely.readthedocs.io/en/stable/manual.html) for polygon verification, [django-leaflet](https://django-leaflet.readthedocs.io/en/latest/) for handling maps, [django-geojson](https://django-geojson.readthedocs.io/en/latest/) for storing geodata, [django-colorfield](https://github.com/fabiocaccamo/django-colorfield) for admin color fields. The library relies on [GDAL](https://gdal.org), which is system specific.
+This app is tested on Django (4.2 to 5.1) and Python (3.9 to 3.12). It heavily relies on outstanding [ezdxf](https://ezdxf.mozman.at/) for handling DXF files, [pyproj](https://pyproj4.github.io/pyproj/stable/) for geographic projections, [shapely](https://shapely.readthedocs.io/en/stable/manual.html) for polygon verification, [django-leaflet](https://django-leaflet.readthedocs.io/en/latest/) for handling maps, [django-geojson](https://django-geojson.readthedocs.io/en/latest/) for storing geodata, [django-colorfield](https://github.com/fabiocaccamo/django-colorfield) for admin color fields. The library relies on [GDAL](https://gdal.org), which is system specific.
 ## Installation from PyPI
 Activate your virtual environment and install with:
 ```
@@ -27,7 +27,7 @@ urlpatterns = [
     path('geocad/', include('djeocad.urls', namespace = 'djeocad')),
 ]
 ```
-Migrate and collectstatic. You also need to add initial map defaults to `settings.py` (these are the settings for Rome, change them to your location of choice):
+You also need to add initial map defaults to `settings.py` (these are the settings for Rome, change them to your location of choice):
 ```python
 LEAFLET_CONFIG = {
     "DEFAULT_CENTER": (41.8988, 12.5451),
@@ -35,13 +35,12 @@ LEAFLET_CONFIG = {
     "RESET_VIEW": False
 }
 ```
-Add two lists to `my_project/settings.py`:
+Add two lists to `my_project/settings.py` where you can store names of layers and blocks you don't want to be processed:
 ```python
-CAD_LAYER_BLACKLIST = [...]
-CAD_BLOCK_BLACKLIST = [...]
+CAD_LAYER_BLACKLIST = ["name_of_unprocessed_layer", ]
+CAD_BLOCK_BLACKLIST = ["name_of_unprocessed_block", ]
 ```
-Here you can store names of layers and blocks you don't want to be processed.
-At last run the following management commands:
+Finally run the following management commands:
 ```
 python manage.py migrate
 python manage.py collectstatic
@@ -61,7 +60,7 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [BASE_DIR / "my_project/templates"],
-        ...
+        # ...
     },
 ]
 ```
