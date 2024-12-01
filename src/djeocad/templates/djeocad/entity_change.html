@@ -22,11 +22,15 @@
     <p>{% trans "Click on the map below to change coordinates" %}</p>
     <input type="submit" value="Submit">
   </form>
-  <a style="color: red;"
-     href="{% url 'djeocad:insertion_delete' pk=object.id %}"
-  >
-    {% trans "Delete insertion" %}
-  </a>
+  <ul>
+    <li><a href="{% url 'djeocad:drawing_detail' pk=drawing.id %}">
+      {% trans "Back to drawing" %}: {{ drawing.title }}
+    </a></li>
+    <li><a style="color: red;"
+           href="{% url 'djeocad:insertion_delete' pk=object.id %}">
+      {% trans "Delete insertion" %}
+    </a></li>
+  </ul>
   <div id="entity-data" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
     {% include "djeocad/htmx/entity_data_list.html" %}
   </div>
