@@ -13,6 +13,7 @@ from djgeojson.fields import GeometryCollectionField, PointField
 from easy_thumbnails.files import get_thumbnailer
 from ezdxf.addons import geo
 from ezdxf.lldxf.const import InvalidGeoDataException
+from PIL import ImageColor
 from pyproj import Transformer
 from pyproj.aoi import AreaOfInterest
 from pyproj.database import query_utm_crs_info
@@ -558,6 +559,71 @@ encoding="UTF-16" standalone="no" ?>
                     row.append(value)
             writer.writerow(row)
         return writer
+
+    def prepare_dxf_to_download(self):
+        blocks = self.related_layers.filter(is_block=True)
+        if not blocks.exists():
+            return
+        block_list = blocks.values_list("id", flat=True)
+        # extract entities to be processed
+        entities = Entity.objects.filter(
+            block_id__in=block_list, data__added=True
+        ).prefetch_related()
+        if not entities.exists():
+            return
+        # prepare block / layer objects
+        block_objs = {}
+        layer_objs = {}
+        for ent in entities:
+            block_objs[ent.block.name] = ent.block
+            layer_objs[ent.layer.name] = ent.layer
+        # prepare transformers
+        world2utm, utm2world, utm_wcs, rot = self.prepare_transformers()
+        # start DXF
+        doc = ezdxf.new()
+        msp = doc.modelspace()
+        # we fake geodata
+        geodata = msp.new_geodata()
+        geodata = self.fake_geodata(geodata, utm_wcs, rot)
+        # get transform matrix from fake geodata
+        m, epsg = geodata.get_crs_transformation(no_checks=True)  # noqa
+        # add layers
+        for name, layer in layer_objs.items():
+            if name != "0":
+                doc_layer = doc.layers.add(name)
+            else:
+                doc_layer = doc.layers.get("0")
+            color = ImageColor.getcolor(layer.color_field, "RGB")
+            doc_layer.rgb = color
+        # add blocks
+        for name, block in block_objs.items():
+            doc_block = doc.blocks.new(name=name)
+            geometries = block.geom["geometries"]
+            for geom in geometries:
+                geo_proxy = geo.GeoProxy.parse(geom)
+                geo_proxy.apply(
+                    lambda v: ezdxf.math.Vec3(world2utm.transform(v.x, v.y))
+                )
+                geo_proxy.crs_to_wcs(m)
+                for entity in geo_proxy.to_dxf_entities(dxfattribs={"layer": "0"}):
+                    doc_block.add_entity(entity)
+        # add insertions
+        for ent in entities:
+            geo_proxy = geo.GeoProxy.parse(ent.insertion)
+            geo_proxy.apply(lambda v: ezdxf.math.Vec3(world2utm.transform(v.x, v.y)))
+            geo_proxy.crs_to_wcs(m)
+            for entity in geo_proxy.to_dxf_entities():
+                point = entity.dxf.location
+            msp.add_blockref(
+                ent.block.name,
+                point,
+                dxfattribs={
+                    "xscale": ent.xscale,
+                    "yscale": ent.yscale,
+                    "rotation": ent.rotation,
+                    "layer": ent.layer.name,
+                },
+            )
 
 
 class Layer(models.Model):
