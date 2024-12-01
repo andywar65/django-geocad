@@ -639,7 +639,11 @@ class Entity(models.Model):
 
     @property
     def popupContent(self):
-        title_str = f"<p>ID = {self.id}</p>"
+        if self.block:
+            url = reverse("djeocad:insertion_change", kwargs={"pk": self.id})
+            title_str = f'<p><a href="{url}">ID = {self.id}</a></p>'
+        else:
+            title_str = f"<p>ID = {self.id}</p>"
         ltype = _("Layer")
         title_str += f"<ul><li>{ltype}: {nh3.clean(self.layer.name)}</li>"
         if self.block:
