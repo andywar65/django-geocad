@@ -12,8 +12,9 @@ files with geo location, download CSV files with extracted data.
 Requirements
 ------------
 
-This app is tested on Django 5.1.1 and Python 3.12. It heavily relies on
-outstanding `ezdxf <https://ezdxf.mozman.at/>`__ for handling DXF files,
+This app is tested on Django (4.2 to 5.1) and Python (3.9 to 3.12). It
+heavily relies on outstanding `ezdxf <https://ezdxf.mozman.at/>`__ for
+handling DXF files,
 `pyproj <https://pyproj4.github.io/pyproj/stable/>`__ for geographic
 projections,
 `shapely <https://shapely.readthedocs.io/en/stable/manual.html>`__ for
@@ -56,9 +57,8 @@ In your Django project add:
        path('geocad/', include('djeocad.urls', namespace = 'djeocad')),
    ]
 
-Migrate and collectstatic. You also need to add initial map defaults to
-``settings.py`` (these are the settings for Rome, change them to your
-location of choice):
+You also need to add initial map defaults to ``settings.py`` (these are
+the settings for Rome, change them to your location of choice):
 
 .. code:: python
 
@@ -68,15 +68,20 @@ location of choice):
        "RESET_VIEW": False
    }
 
-Add two lists to ``my_project/settings.py``:
+Add two lists to ``my_project/settings.py`` where you can store names of
+layers and blocks you don't want to be processed:
 
 .. code:: python
 
-   CAD_LAYER_BLACKLIST = [...]
-   CAD_BLOCK_BLACKLIST = [...]
+   CAD_LAYER_BLACKLIST = ["name_of_unprocessed_layer", ]
+   CAD_BLOCK_BLACKLIST = ["name_of_unprocessed_block", ]
 
-Here you can store names of layers and blocks you don't want to be
-processed.
+Finally run the following management commands:
+
+::
+
+   python manage.py migrate
+   python manage.py collectstatic
 
 Templates
 ~~~~~~~~~
@@ -92,9 +97,34 @@ sample ``base.html`` is provided among package templates).
    {% block content %}
    {% endblock content %}
 
-Package comes with two templates, ``djeocad/drawing_list.html`` and
-``djeocad/drawing_detail.html``. Copy and override them in your project
-templates to add your styles.
+Package comes with several templates in the ``djeocad/templates/``
+directory. All templates have no styles. If you want to add your own
+styles, copy the templates in a ``my_project/templates/djeocad/``
+directory and override them. You will have to set:
+
+.. code:: python
+
+   TEMPLATES = [
+       {
+           "BACKEND": "django.template.backends.django.DjangoTemplates",
+           "DIRS": [BASE_DIR / "my_project/templates"],
+           # ...
+       },
+   ]
+
+.. _moving-from-version-040-to-050:
+
+Moving from version 0.4.0 to 0.5.0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Version ``0.5.0`` has some breaking changes. Once you upgrade run the
+following management commands:
+
+::
+
+   python manage.py migrate
+   python manage.py collectstatic
+   python manage.py populate_block_field
 
 View drawings
 -------------
@@ -182,6 +212,20 @@ is contained in a ``Polyline`` of the same layer, also the text content
 will be associated to the entity. This can be helpful if you want to
 label rooms.
 
+Adding block instances
+----------------------
+
+In ``Drawing Detail`` view it is possible to add ``block instances`` to
+the drawing (this works if blocks are actually present in the drawing).
+Click on the ``Add insertions`` link, you will be presented with a form
+and a map of the drawing. Choose the ``Block`` you want to instantiate
+and the ``Layer`` you want to place it on. Choose the
+``insertion point`` by clicking on the map. Submit and you will be
+redirected to another page where you can modify the insertion or add
+``Attributes`` to the block (Key/Value pairs attached to the block
+insertion). Submit and you will be redirected to the ``Drawing Detail``
+view.
+
 Modify drawings
 ---------------
 
@@ -206,6 +250,15 @@ scratch and incorporated into the file.
 Tests
 -----
 
-Tests with unittest, 98% coverage, missing some special conditions in
+Tests with unittest, 96% coverage, missing some special conditions in
 DXF extraction. Tested for Django 4.2 and 5.1 and Python 3.9, 3.10,
 3.11, 3.12 versions.
+
+Changelog
+---------
+
+-  0.5.0: Breaking changes, see installation instructions. Added a
+   ``Block`` FK field to ``Entity`` model (previously this information
+   was stored in the ``data`` JSONField). Added ``EntityData`` model to
+   replace information previously stored in the ``data`` JSONField.
+-  0.4.0: First working version
