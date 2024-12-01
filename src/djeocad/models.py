@@ -5,8 +5,9 @@ import nh3
 from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
-from django.db import models
+from django.db import IntegrityError, models, transaction
 from django.urls import reverse
+from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
 from djgeojson.fields import GeometryCollectionField, PointField
 from easy_thumbnails.files import get_thumbnailer
@@ -584,13 +585,38 @@ class Layer(models.Model):
         null=True,
     )
 
+    __original_name = None
+
     class Meta:
         verbose_name = _("Layer")
         verbose_name_plural = _("Layers")
         ordering = ("name",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["drawing", "name", "is_block"], name="unique_layer_name"
+            ),
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # access dict to avoid recursion error upon deleting parent (bug #31435)
+        self.__original_name = self.__dict__.get("name")
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # check for layer unique name
+        try:
+            # avoid TransactionManagementError
+            with transaction.atomic():
+                super().save(*args, **kwargs)
+        except IntegrityError:
+            if self.__original_name:
+                self.name = self.__original_name
+            else:
+                self.name = get_random_string(7)
+            super().save(*args, **kwargs)
 
 
 def get_default_entity_data():
