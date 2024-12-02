@@ -609,7 +609,7 @@ encoding="UTF-16" standalone="no" ?>
             # change JSON so entity is not selected again
             ent.data["added"] = False
         # update all entities
-        Entity.objects.bulk_update(entities, ["data_added"])
+        Entity.objects.bulk_update(entities, ["data"])
         # replace dxf
         doc.saveas(filename=self.dxf.path, encoding="utf-8", fmt="asc")
 
