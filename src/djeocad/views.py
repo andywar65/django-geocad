@@ -266,6 +266,7 @@ def csv_download(request, pk):
 
 def drawing_download(request, pk):
     drawing = get_object_or_404(Drawing, id=pk)
+    drawing.prepare_dxf_to_download()
     response = HttpResponse(drawing.dxf, content_type="text/plain")
     response["Content-Disposition"] = f"attachment; filename={drawing.title}.dxf"
 
