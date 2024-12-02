@@ -252,7 +252,7 @@ class Drawing(models.Model):
             # replace stored DXF
             doc.saveas(filename=self.dxf.path, encoding="utf-8", fmt="asc")
         # get transform matrix from true or fake geodata
-        m, epsg = geodata.get_crs_transformation(no_checks=True)  # noqa
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
         layer_table = self.prepare_layer_table(doc)
         for e_type in self.entity_types:
             self.extract_entities(msp, e_type, m, utm2world, layer_table)
@@ -571,50 +571,27 @@ encoding="UTF-16" standalone="no" ?>
         ).prefetch_related()
         if not entities.exists():
             return
-        # prepare block / layer objects
-        block_objs = {}
-        layer_objs = {}
-        for ent in entities:
-            block_objs[ent.block.name] = ent.block
-            layer_objs[ent.layer.name] = ent.layer
         # prepare transformers
         world2utm, utm2world, utm_wcs, rot = self.prepare_transformers()
         # start DXF
-        doc = ezdxf.new()
+        doc = ezdxf.readfile(self.dxf.path)
         msp = doc.modelspace()
-        # we fake geodata
-        geodata = msp.new_geodata()
-        geodata = self.fake_geodata(geodata, utm_wcs, rot)
-        # get transform matrix from fake geodata
-        m, epsg = geodata.get_crs_transformation(no_checks=True)  # noqa
-        # add layers
-        for name, layer in layer_objs.items():
-            if name != "0":
-                doc_layer = doc.layers.add(name)
-            else:
-                doc_layer = doc.layers.get("0")
-            color = ImageColor.getcolor(layer.color_field, "RGB")
-            doc_layer.rgb = color
-        # add blocks
-        for name, block in block_objs.items():
-            doc_block = doc.blocks.new(name=name)
-            geometries = block.geom["geometries"]
-            for geom in geometries:
-                geo_proxy = geo.GeoProxy.parse(geom)
-                geo_proxy.apply(
-                    lambda v: ezdxf.math.Vec3(world2utm.transform(v.x, v.y))
-                )
-                geo_proxy.crs_to_wcs(m)
-                for entity in geo_proxy.to_dxf_entities(dxfattribs={"layer": "0"}):
-                    doc_block.add_entity(entity)
+        geodata = msp.get_geodata()
+        # get transform matrix from geodata
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
         # add insertions
         for ent in entities:
+            # could be a new layer
+            if ent.layer.name not in doc.layers:
+                new_layer = doc.layers.add(ent.layer.name)
+                color = ImageColor.getcolor(ent.layer.color_field, "RGB")
+                new_layer.rgb = color
             geo_proxy = geo.GeoProxy.parse(ent.insertion)
             geo_proxy.apply(lambda v: ezdxf.math.Vec3(world2utm.transform(v.x, v.y)))
             geo_proxy.crs_to_wcs(m)
             for entity in geo_proxy.to_dxf_entities():
                 point = entity.dxf.location
-            msp.add_blockref(
+            block_ref = msp.add_blockref(
                 ent.block.name,
                 point,
                 dxfattribs={
@@ -624,6 +601,17 @@ encoding="UTF-16" standalone="no" ?>
                     "layer": ent.layer.name,
                 },
             )
+            # add block attributes
+            values = {}
+            for ed in ent.related_data.all():
+                values[ed.key] = ed.value
+            block_ref.add_auto_attribs(values)
+            # change JSON so entity is not selected again
+            ent.data["added"] = False
+        # update all entities
+        Entity.objects.bulk_update(entities, ["data_added"])
+        # replace dxf
+        doc.saveas(filename=self.dxf.path, encoding="utf-8", fmt="asc")
 
 
 class Layer(models.Model):
@@ -773,7 +761,7 @@ class Entity(models.Model):
             geodata = msp.new_geodata()
             geodata = self.block.drawing.fake_geodata(geodata, utm_wcs, rot)
             # get transform matrix from fake geodata
-            m, epsg = geodata.get_crs_transformation(no_checks=True)  # noqa
+            m, epsg = geodata.get_crs_transformation(no_checks=True)
             # add block to fake DXF
             block = doc.blocks.new(name=self.block.name)
             geometries = self.block.geom["geometries"]
