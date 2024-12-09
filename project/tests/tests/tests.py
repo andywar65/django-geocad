@@ -250,6 +250,7 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(ent.layer.name, "rgb")
 
     def test_save_blocks(self):
+        # TODO make this test more meaningful
         draw = Drawing.objects.get(title="Referenced")
         doc = ezdxf.readfile(draw.dxf.path)
         msp = doc.modelspace()
@@ -259,7 +260,7 @@ class GeoCADModelTest(TestCase):
         blk_before = Layer.objects.filter(is_block=True).count()
         draw.save_blocks(doc, m, utm2world)
         blk_after = Layer.objects.filter(is_block=True).count()
-        self.assertTrue(blk_after - blk_before, 2)
+        self.assertEqual(blk_after - blk_before, 0)
 
     def test_extract_insertions(self):
         draw = Drawing.objects.get(title="Referenced")

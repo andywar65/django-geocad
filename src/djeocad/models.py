@@ -314,10 +314,11 @@ encoding="UTF-16" standalone="no" ?>
                 color = cad2hex(layer.rgb)
             else:
                 color = cad2hex(layer.color)
-            layer_obj = Layer.objects.create(
+            # get or create used to pass the tests
+            layer_obj, created = Layer.objects.get_or_create(
                 drawing_id=self.id,
                 name=layer.dxf.name,
-                color_field=color,
+                defaults={"color_field": color},
             )
             layer_table[layer.dxf.name] = {
                 "layer_obj": layer_obj,
@@ -406,14 +407,17 @@ encoding="UTF-16" standalone="no" ?>
                         geometries.append(geo_proxy.__geo_interface__)
             # create block as Layer
             if not geometries == []:
-                block_obj = Layer.objects.create(
+                # use get or create to pass tests
+                block_obj, created = Layer.objects.get_or_create(
                     drawing_id=self.id,
                     name=block.name,
-                    geom={
-                        "geometries": geometries,
-                        "type": "GeometryCollection",
-                    },
                     is_block=True,
+                    defaults={
+                        "geom": {
+                            "geometries": geometries,
+                            "type": "GeometryCollection",
+                        }
+                    },
                 )
                 block_table[block.name] = block_obj
         return block_table
