@@ -49,10 +49,8 @@ Repository = "https://github.com/andywar65/django-geocad"
 [project.optional-dependencies]
 dev = [
     "build",
-    "nox",
     "twine",
     "coverage",
-    "psycopg[binary,pool]",
     "environs[django]",
 ]
 test = [
