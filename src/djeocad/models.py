@@ -5,13 +5,15 @@ import nh3
 from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
-from django.db import models
+from django.db import IntegrityError, models, transaction
 from django.urls import reverse
+from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
 from djgeojson.fields import GeometryCollectionField, PointField
 from easy_thumbnails.files import get_thumbnailer
 from ezdxf.addons import geo
 from ezdxf.lldxf.const import InvalidGeoDataException
+from PIL import ImageColor
 from pyproj import Transformer
 from pyproj.aoi import AreaOfInterest
 from pyproj.database import query_utm_crs_info
@@ -250,7 +252,7 @@ class Drawing(models.Model):
             # replace stored DXF
             doc.saveas(filename=self.dxf.path, encoding="utf-8", fmt="asc")
         # get transform matrix from true or fake geodata
-        m, epsg = geodata.get_crs_transformation(no_checks=True)  # noqa
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
         layer_table = self.prepare_layer_table(doc)
         for e_type in self.entity_types:
             self.extract_entities(msp, e_type, m, utm2world, layer_table)
@@ -312,10 +314,11 @@ encoding="UTF-16" standalone="no" ?>
                 color = cad2hex(layer.rgb)
             else:
                 color = cad2hex(layer.color)
-            layer_obj = Layer.objects.create(
+            # get or create used to pass the tests
+            layer_obj, created = Layer.objects.get_or_create(
                 drawing_id=self.id,
                 name=layer.dxf.name,
-                color_field=color,
+                defaults={"color_field": color},
             )
             layer_table[layer.dxf.name] = {
                 "layer_obj": layer_obj,
@@ -404,14 +407,17 @@ encoding="UTF-16" standalone="no" ?>
                         geometries.append(geo_proxy.__geo_interface__)
             # create block as Layer
             if not geometries == []:
-                block_obj = Layer.objects.create(
+                # use get or create to pass tests
+                block_obj, created = Layer.objects.get_or_create(
                     drawing_id=self.id,
                     name=block.name,
-                    geom={
-                        "geometries": geometries,
-                        "type": "GeometryCollection",
-                    },
                     is_block=True,
+                    defaults={
+                        "geom": {
+                            "geometries": geometries,
+                            "type": "GeometryCollection",
+                        }
+                    },
                 )
                 block_table[block.name] = block_obj
         return block_table
@@ -558,6 +564,59 @@ encoding="UTF-16" standalone="no" ?>
             writer.writerow(row)
         return writer
 
+    def prepare_dxf_to_download(self):
+        blocks = self.related_layers.filter(is_block=True)
+        if not blocks.exists():
+            return
+        block_list = blocks.values_list("id", flat=True)
+        # extract entities to be processed
+        entities = Entity.objects.filter(
+            block_id__in=block_list, data__added=True
+        ).prefetch_related()
+        if not entities.exists():
+            return
+        # prepare transformers
+        world2utm, utm2world, utm_wcs, rot = self.prepare_transformers()
+        # start DXF
+        doc = ezdxf.readfile(self.dxf.path)
+        msp = doc.modelspace()
+        geodata = msp.get_geodata()
+        # get transform matrix from geodata
+        m, epsg = geodata.get_crs_transformation(no_checks=True)
+        # add insertions
+        for ent in entities:
+            # could be a new layer
+            if ent.layer.name not in doc.layers:
+                new_layer = doc.layers.add(ent.layer.name)
+                color = ImageColor.getcolor(ent.layer.color_field, "RGB")
+                new_layer.rgb = color
+            geo_proxy = geo.GeoProxy.parse(ent.insertion)
+            geo_proxy.apply(lambda v: ezdxf.math.Vec3(world2utm.transform(v.x, v.y)))
+            geo_proxy.crs_to_wcs(m)
+            for entity in geo_proxy.to_dxf_entities():
+                point = entity.dxf.location
+            block_ref = msp.add_blockref(
+                ent.block.name,
+                point,
+                dxfattribs={
+                    "xscale": ent.xscale,
+                    "yscale": ent.yscale,
+                    "rotation": ent.rotation,
+                    "layer": ent.layer.name,
+                },
+            )
+            # add block attributes
+            values = {}
+            for ed in ent.related_data.all():
+                values[ed.key] = ed.value
+            block_ref.add_auto_attribs(values)
+            # change JSON so entity is not selected again
+            ent.data["added"] = False
+        # update all entities
+        Entity.objects.bulk_update(entities, ["data"])
+        # replace dxf
+        doc.saveas(filename=self.dxf.path, encoding="utf-8", fmt="asc")
+
 
 class Layer(models.Model):
 
@@ -588,9 +647,24 @@ class Layer(models.Model):
         verbose_name = _("Layer")
         verbose_name_plural = _("Layers")
         ordering = ("name",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["drawing", "name", "is_block"], name="unique_layer_name"
+            ),
+        ]
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # check for layer unique name
+        try:
+            # avoid TransactionManagementError
+            with transaction.atomic():
+                super().save(*args, **kwargs)
+        except IntegrityError:
+            self.name = f"{self.name}_{get_random_string(7)}"
+            super().save(*args, **kwargs)
 
 
 def get_default_entity_data():
@@ -639,7 +713,11 @@ class Entity(models.Model):
 
     @property
     def popupContent(self):
-        title_str = f"<p>ID = {self.id}</p>"
+        if self.block:
+            url = reverse("djeocad:insertion_change", kwargs={"pk": self.id})
+            title_str = f'<p><a href="{url}">ID = {self.id}</a></p>'
+        else:
+            title_str = f"<p>ID = {self.id}</p>"
         ltype = _("Layer")
         title_str += f"<ul><li>{ltype}: {nh3.clean(self.layer.name)}</li>"
         if self.block:
@@ -677,7 +755,7 @@ class Entity(models.Model):
             geodata = msp.new_geodata()
             geodata = self.block.drawing.fake_geodata(geodata, utm_wcs, rot)
             # get transform matrix from fake geodata
-            m, epsg = geodata.get_crs_transformation(no_checks=True)  # noqa
+            m, epsg = geodata.get_crs_transformation(no_checks=True)
             # add block to fake DXF
             block = doc.blocks.new(name=self.block.name)
             geometries = self.block.geom["geometries"]

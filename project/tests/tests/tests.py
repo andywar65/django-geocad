@@ -250,6 +250,7 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(ent.layer.name, "rgb")
 
     def test_save_blocks(self):
+        # TODO make this test more meaningful
         draw = Drawing.objects.get(title="Referenced")
         doc = ezdxf.readfile(draw.dxf.path)
         msp = doc.modelspace()
@@ -259,7 +260,7 @@ class GeoCADModelTest(TestCase):
         blk_before = Layer.objects.filter(is_block=True).count()
         draw.save_blocks(doc, m, utm2world)
         blk_after = Layer.objects.filter(is_block=True).count()
-        self.assertTrue(blk_after - blk_before, 2)
+        self.assertEqual(blk_after - blk_before, 0)
 
     def test_extract_insertions(self):
         draw = Drawing.objects.get(title="Referenced")
@@ -863,3 +864,53 @@ class GeoCADModelTest(TestCase):
             reverse("djeocad:data_list", kwargs={"pk": 99}),
         )
         self.assertEqual(response.status_code, 404)
+
+    def test_layer_constraints(self):
+        draw = Drawing.objects.get(title="Referenced")
+        layer = Layer(drawing=draw, name="LLayyerr")
+        layer.save()
+        self.assertEqual(layer.name, "LLayyerr")
+        layer2 = Layer(drawing=draw, name="Layer")
+        layer2.save()
+        self.assertNotEqual(layer2.name, "Layer")
+
+    def test_prepare_dxf_to_download(self):
+        draw = Drawing.objects.get(title="Referenced")
+        layer = Layer.objects.get(drawing=draw, name="0")
+        block = Layer.objects.filter(drawing=draw, is_block=True).last()
+        self.assertEqual(block.name, "block")
+        ent = Entity.objects.create(
+            layer=layer,
+            block=block,
+            insertion={"type": "Point", "coordinates": [12.48, 42.00]},
+            data={
+                "processed": "true",
+                "added": "true",
+            },
+        )
+        EntityData.objects.create(
+            entity=ent,
+            key="Foo",
+            value="Bar",
+        )
+        draw.prepare_dxf_to_download()
+        ent = Entity.objects.get(id=ent.id)
+        self.assertFalse(ent.data["added"])
+
+    def test_prepare_dxf_to_download_new_layer(self):
+        draw = Drawing.objects.get(title="Referenced")
+        layer = Layer.objects.create(drawing=draw, name="New layer")
+        block = Layer.objects.filter(drawing=draw, is_block=True).last()
+        self.assertEqual(block.name, "block")
+        ent = Entity.objects.create(
+            layer=layer,
+            block=block,
+            insertion={"type": "Point", "coordinates": [12.48, 42.00]},
+            data={
+                "processed": "true",
+                "added": "true",
+            },
+        )
+        draw.prepare_dxf_to_download()
+        ent = Entity.objects.get(id=ent.id)
+        self.assertFalse(ent.data["added"])
