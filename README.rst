@@ -112,10 +112,10 @@ directory and override them. You will have to set:
        },
    ]
 
-.. _moving-from-version-040-to-050:
+.. _moving-from-version-040-to-050-or-later:
 
-Moving from version 0.4.0 to 0.5.0
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Moving from version 0.4.0 to 0.5.0 (or later)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Version ``0.5.0`` has some breaking changes. Once you upgrade run the
 following management commands:
@@ -229,10 +229,12 @@ view.
 Modify drawings
 ---------------
 
-You can modify geolocation and appearance of drawings, but the ``DXF``
-will not be affected. If you want to modify the file, download it and
-use your favourite CAD application, then upload it back again (it will
-be already geolocated!).
+Not all changes in the ``Drawing`` will be mirrored into the ``DXF``.
+Changes to and deletions of ``Layers`` will not be recorded. New
+``Layers`` and new ``Block`` instances will pass into the downloaded
+``DXF``. Download it and use your favourite CAD application for further
+modifications, then upload it back again (it will be already
+geolocated!).
 
 About Geodata
 -------------
@@ -257,6 +259,10 @@ DXF extraction. Tested for Django 4.2 and 5.1 and Python 3.9, 3.10,
 Changelog
 ---------
 
+-  0.6.0: Cannot have two ``Layers`` with the same name in the same
+   ``Drawing`` (this is consistent with CAD programs). Newly created
+   ``Layers`` and new ``Block`` insertions will be recorded into the
+   downloaded ``DXF``.
 -  0.5.0: Breaking changes, see installation instructions. Added a
    ``Block`` FK field to ``Entity`` model (previously this information
    was stored in the ``data`` JSONField). Added ``EntityData`` model to
