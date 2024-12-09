@@ -864,3 +864,12 @@ class GeoCADModelTest(TestCase):
             reverse("djeocad:data_list", kwargs={"pk": 99}),
         )
         self.assertEqual(response.status_code, 404)
+
+    def test_layer_constraints(self):
+        draw = Drawing.objects.get(title="Referenced")
+        layer = Layer(drawing=draw, name="LLayyerr")
+        layer.save()
+        self.assertEqual(layer.name, "LLayyerr")
+        layer2 = Layer(drawing=draw, name="Layer")
+        layer2.save()
+        self.assertNotEqual(layer2.name, "Layer")

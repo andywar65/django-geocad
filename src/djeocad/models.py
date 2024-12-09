@@ -643,8 +643,6 @@ class Layer(models.Model):
         null=True,
     )
 
-    __original_name = None
-
     class Meta:
         verbose_name = _("Layer")
         verbose_name_plural = _("Layers")
@@ -654,11 +652,6 @@ class Layer(models.Model):
                 fields=["drawing", "name", "is_block"], name="unique_layer_name"
             ),
         ]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # access dict to avoid recursion error upon deleting parent (bug #31435)
-        self.__original_name = self.__dict__.get("name")
 
     def __str__(self):
         return self.name
@@ -670,10 +663,7 @@ class Layer(models.Model):
             with transaction.atomic():
                 super().save(*args, **kwargs)
         except IntegrityError:
-            if self.__original_name:
-                self.name = self.__original_name
-            else:
-                self.name = get_random_string(7)
+            self.name = f"{self.name}_{get_random_string(7)}"
             super().save(*args, **kwargs)
 
 
