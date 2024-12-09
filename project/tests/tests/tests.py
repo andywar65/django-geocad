@@ -873,3 +873,44 @@ class GeoCADModelTest(TestCase):
         layer2 = Layer(drawing=draw, name="Layer")
         layer2.save()
         self.assertNotEqual(layer2.name, "Layer")
+
+    def test_prepare_dxf_to_download(self):
+        draw = Drawing.objects.get(title="Referenced")
+        layer = Layer.objects.get(drawing=draw, name="0")
+        block = Layer.objects.filter(drawing=draw, is_block=True).last()
+        self.assertEqual(block.name, "block")
+        ent = Entity.objects.create(
+            layer=layer,
+            block=block,
+            insertion={"type": "Point", "coordinates": [12.48, 42.00]},
+            data={
+                "processed": "true",
+                "added": "true",
+            },
+        )
+        EntityData.objects.create(
+            entity=ent,
+            key="Foo",
+            value="Bar",
+        )
+        draw.prepare_dxf_to_download()
+        ent = Entity.objects.get(id=ent.id)
+        self.assertFalse(ent.data["added"])
+
+    def test_prepare_dxf_to_download_new_layer(self):
+        draw = Drawing.objects.get(title="Referenced")
+        layer = Layer.objects.create(drawing=draw, name="New layer")
+        block = Layer.objects.filter(drawing=draw, is_block=True).last()
+        self.assertEqual(block.name, "block")
+        ent = Entity.objects.create(
+            layer=layer,
+            block=block,
+            insertion={"type": "Point", "coordinates": [12.48, 42.00]},
+            data={
+                "processed": "true",
+                "added": "true",
+            },
+        )
+        draw.prepare_dxf_to_download()
+        ent = Entity.objects.get(id=ent.id)
+        self.assertFalse(ent.data["added"])
