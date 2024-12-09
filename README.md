@@ -64,7 +64,7 @@ TEMPLATES = [
     },
 ]
 ```
-### Moving from version 0.4.0 to 0.5.0
+### Moving from version 0.4.0 to 0.5.0 (or later)
 Version `0.5.0` has some breaking changes. Once you upgrade run the following management commands:
 ```
 python manage.py migrate
@@ -92,11 +92,12 @@ You can also download a `CSV` file that contains basic informations of some enti
 ## Adding block instances
 In `Drawing Detail` view it is possible to add `block instances` to the drawing (this works if blocks are actually present in the drawing). Click on the `Add insertions` link, you will be presented with a form and a map of the drawing. Choose the `Block` you want to instantiate and the `Layer` you want to place it on. Choose the `insertion point` by clicking on the map. Submit and you will be redirected to another page where you can modify the insertion or add `Attributes` to the block (Key/Value pairs attached to the block insertion). Submit and you will be redirected to the `Drawing Detail` view.
 ## Modify drawings
-You can modify geolocation and appearance of drawings, but the `DXF` will not be affected. If you want to modify the file, download it and use your favourite CAD application, then upload it back again (it will be already geolocated!).
+Not all changes in the `Drawing` will be mirrored into the `DXF`. Changes to and deletions of `Layers` will not be recorded. New `Layers` and new `Block` instances will pass into the downloaded `DXF`. Download it and use your favourite CAD application for further modifications, then upload it back again (it will be already geolocated!).
 ## About Geodata
 Geodata can be stored in DXF, but `ezdxf` library can't deal with all kind of Coordinate Reference Systems (CRS). If Geodata is not found in the file (or if the CRS is not compatible) `django-geocad` asks for user input: the location of a point both on the map and on the drawing coordinates system, and the rotation with respect to True North. The `pyproj` library hands over the best Universal Transverse Mercator CRS for the location (UTM is compatible with `ezdxf`). Thanks to UTM, Reference / Design Point and rotation input, Geodata can be built from scratch and incorporated into the file.
 ## Tests
 Tests with unittest, 96% coverage, missing some special conditions in DXF extraction. Tested for Django 4.2 and 5.1 and Python 3.9, 3.10, 3.11, 3.12 versions.
 ## Changelog
+- 0.6.0: Cannot have two `Layers` with the same name in the same `Drawing` (this is consistent with CAD programs). Newly created `Layers` and new `Block` insertions will be recorded into the downloaded `DXF`.
 - 0.5.0: Breaking changes, see installation instructions. Added a `Block` FK field to `Entity` model (previously this information was stored in the `data` JSONField). Added `EntityData` model to replace information previously stored in the `data` JSONField.
 - 0.4.0: First working version
