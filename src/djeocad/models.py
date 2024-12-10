@@ -571,7 +571,7 @@ encoding="UTF-16" standalone="no" ?>
         block_list = blocks.values_list("id", flat=True)
         # extract entities to be processed
         entities = Entity.objects.filter(
-            block_id__in=block_list, data__added=True
+            block_id__in=block_list, data__added="true"
         ).prefetch_related()
         if not entities.exists():
             return
@@ -611,7 +611,7 @@ encoding="UTF-16" standalone="no" ?>
                 values[ed.key] = ed.value
             block_ref.add_auto_attribs(values)
             # change JSON so entity is not selected again
-            ent.data["added"] = False
+            ent.data["added"] = "false"
         # update all entities
         Entity.objects.bulk_update(entities, ["data"])
         # replace dxf

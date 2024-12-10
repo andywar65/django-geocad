@@ -895,7 +895,7 @@ class GeoCADModelTest(TestCase):
         )
         draw.prepare_dxf_to_download()
         ent = Entity.objects.get(id=ent.id)
-        self.assertFalse(ent.data["added"])
+        self.assertEqual(ent.data["added"], "false")
 
     def test_prepare_dxf_to_download_new_layer(self):
         draw = Drawing.objects.get(title="Referenced")
@@ -913,4 +913,4 @@ class GeoCADModelTest(TestCase):
         )
         draw.prepare_dxf_to_download()
         ent = Entity.objects.get(id=ent.id)
-        self.assertFalse(ent.data["added"])
+        self.assertEqual(ent.data["added"], "false")
