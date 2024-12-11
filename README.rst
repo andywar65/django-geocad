@@ -259,6 +259,8 @@ DXF extraction. Tested for Django 4.2 and 5.1 and Python 3.9, 3.10,
 Changelog
 ---------
 
+-  0.6.1: Changed a JSONField lookup that was treated differently by
+   SQLite and Postgres
 -  0.6.0: Cannot have two ``Layers`` with the same name in the same
    ``Drawing`` (this is consistent with CAD programs). Newly created
    ``Layers`` and new ``Block`` insertions will be recorded into the

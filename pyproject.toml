@@ -14,7 +14,7 @@ python_files = ["test_*.py", ]
 
 [project]
 name = "django-geocad"
-version = "0.6.0"
+version = "0.6.1"
 authors = [
   { name="andywar65", email="andy.war1965@gmail.com" },
 ]
@@ -52,7 +52,9 @@ dev = [
     "twine",
     "coverage",
     "environs[django]",
+    "psycopg[binary,pool]",
 ]
 test = [
     "environs[django]",
+    "psycopg[binary,pool]",
 ]

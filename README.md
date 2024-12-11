@@ -98,6 +98,7 @@ Geodata can be stored in DXF, but `ezdxf` library can't deal with all kind of Co
 ## Tests
 Tests with unittest, 96% coverage, missing some special conditions in DXF extraction. Tested for Django 4.2 and 5.1 and Python 3.9, 3.10, 3.11, 3.12 versions.
 ## Changelog
+- 0.6.1: Changed a JSONField lookup that was treated differently by SQLite and Postgres
 - 0.6.0: Cannot have two `Layers` with the same name in the same `Drawing` (this is consistent with CAD programs). Newly created `Layers` and new `Block` insertions will be recorded into the downloaded `DXF`.
 - 0.5.0: Breaking changes, see installation instructions. Added a `Block` FK field to `Entity` model (previously this information was stored in the `data` JSONField). Added `EntityData` model to replace information previously stored in the `data` JSONField.
 - 0.4.0: First working version
