@@ -463,6 +463,10 @@ encoding="UTF-16" standalone="no" ?>
             rotation=rotation,
             xscale=xscale,
             yscale=yscale,
+            data={
+                "processed": "true",
+                "added": "false",
+            },
         )
         # add attributes
         if ins.attribs:
@@ -713,7 +717,7 @@ class Entity(models.Model):
 
     @property
     def popupContent(self):
-        if self.block:
+        if "added" in self.data and self.data["added"] == "true":
             url = reverse("djeocad:insertion_change", kwargs={"pk": self.id})
             title_str = f'<p><a href="{url}">ID = {self.id}</a></p>'
         else:
