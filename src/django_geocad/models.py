@@ -31,7 +31,7 @@ class Drawing(models.Model):
     dxf = models.FileField(
         _("DXF file"),
         max_length=200,
-        upload_to="uploads/djeocad/dxf/",
+        upload_to="uploads/django_geocad/dxf/",
         validators=[
             FileExtensionValidator(
                 allowed_extensions=[
@@ -49,7 +49,7 @@ class Drawing(models.Model):
         blank=True,
     )
     image = models.ImageField(
-        _("Image"), upload_to="uploads/djeocad/images/", null=True, blank=True
+        _("Image"), upload_to="uploads/django_geocad/images/", null=True, blank=True
     )
     geom = PointField(_("Location"), null=True, blank=True)
     designx = models.FloatField(
@@ -112,7 +112,7 @@ class Drawing(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse("djeocad:drawing_detail", kwargs={"pk": self.id})
+        return reverse("django_geocad:drawing_detail", kwargs={"pk": self.id})
 
     @property
     def popupContent(self):
@@ -718,7 +718,7 @@ class Entity(models.Model):
     @property
     def popupContent(self):
         if "added" in self.data and self.data["added"] == "true":
-            url = reverse("djeocad:insertion_change", kwargs={"pk": self.id})
+            url = reverse("django_geocad:insertion_change", kwargs={"pk": self.id})
             title_str = f'<p><a href="{url}">ID = {self.id}</a></p>'
         else:
             title_str = f"<p>ID = {self.id}</p>"

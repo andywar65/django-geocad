@@ -13,7 +13,7 @@ from .views import (
     drawing_download,
 )
 
-app_name = "djeocad"
+app_name = "django_geocad"
 urlpatterns = [
     path("", DrawingListView.as_view(), name="drawing_list"),
     path("<pk>", DrawingDetailView.as_view(), name="drawing_detail"),

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 
-from djeocad.models import Entity, EntityData, Layer
+from django_geocad.models import Entity, EntityData, Layer
 
 
 class Command(BaseCommand):

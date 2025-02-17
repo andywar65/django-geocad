@@ -19,14 +19,14 @@
     <summary style="font-size: 1.875em;">{% trans "All drawings" %}</summary>
     <ul>
       <li>
-        <a href="/admin/djeocad/drawing/add/">
+        <a href="/admin/django_geocad/drawing/add/">
           {% trans "Add drawing" %}
         </a>
       </li>
       {% if unreferenced %}
         {% for unref in unreferenced %}
           <li>
-            <a href="/admin/djeocad/drawing/{{ unref.id }}/change/">
+            <a href="/admin/django_geocad/drawing/{{ unref.id }}/change/">
               {% trans "Unreferenced drawing" %}: {{ unref.title }}
             </a>
           </li>
@@ -35,8 +35,8 @@
     </ul>
   </details>
   <script id="marker_data" type="application/json">{{ object_list|geojsonfeature:"popupContent"|safe }}</script>
-  {% include "djeocad/map_data.html" %}
-  <script src="{% static 'djeocad/js/map_script.js'%}"></script>
+  {% include "django_geocad/map_data.html" %}
+  <script src="{% static 'django_geocad/js/map_script.js'%}"></script>
   <div>
     {% leaflet_map "mymap" callback="window.map_init" %}
   </div>

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("djeocad", "0006_entitydata"),
+        ("django_geocad", "0006_entitydata"),
     ]
 
     operations = [

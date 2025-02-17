@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 
-from djeocad.models import Drawing, Entity, Layer
+from django_geocad.models import Drawing, Entity, Layer
 
 
 @override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT).joinpath("tests"))
@@ -59,7 +59,7 @@ class GeoCADCommandTest(TestCase):
     def tearDownClass(cls):
         """Checks existing files, then removes them"""
         try:
-            path = Path(settings.MEDIA_ROOT).joinpath("uploads/djeocad/dxf/")
+            path = Path(settings.MEDIA_ROOT).joinpath("uploads/django_geocad/dxf/")
             list = [e for e in path.iterdir() if e.is_file()]
             for file in list:
                 Path(file).unlink()

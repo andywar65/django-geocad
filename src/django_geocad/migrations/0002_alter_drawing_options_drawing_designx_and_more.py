@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("djeocad", "0001_initial"),
+        ("django_geocad", "0001_initial"),
     ]
 
     operations = [
@@ -31,9 +31,9 @@ class Migration(migrations.Migration):
             model_name="drawing",
             name="dxf",
             field=models.FileField(
-                default="uploads/djeocad/dxf/sample.dxf",
+                default="uploads/django_geocad/dxf/sample.dxf",
                 max_length=200,
-                upload_to="uploads/djeocad/dxf/",
+                upload_to="uploads/django_geocad/dxf/",
                 validators=[
                     django.core.validators.FileExtensionValidator(
                         allowed_extensions=["dxf"]
@@ -63,7 +63,7 @@ class Migration(migrations.Migration):
             field=models.ImageField(
                 blank=True,
                 null=True,
-                upload_to="uploads/djeocad/images/",
+                upload_to="uploads/django_geocad/images/",
                 verbose_name="Image",
             ),
         ),
@@ -75,7 +75,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="parent_drawing",
-                to="djeocad.drawing",
+                to="django_geocad.drawing",
                 verbose_name="Parent Drawing",
             ),
         ),

@@ -12,7 +12,7 @@ files with geo location, download CSV files with extracted data.
 Requirements
 ------------
 
-This app is tested on Django (4.2 to 5.1) and Python (3.9 to 3.12). It
+This app is tested on Django (4.2 to 5.1) and Python (3.9 to 3.13). It
 heavily relies on outstanding `ezdxf <https://ezdxf.mozman.at/>`__ for
 handling DXF files,
 `pyproj <https://pyproj4.github.io/pyproj/stable/>`__ for geographic
@@ -46,7 +46,7 @@ In your Django project add:
        "leaflet",
        "djgeojson",
        "colorfield",
-       "djeocad",
+       "django_geocad",
    ]
 
 .. code:: python
@@ -54,7 +54,7 @@ In your Django project add:
    # my_project/urls.py
    urlpatterns = [
        # ...
-       path('geocad/', include('djeocad.urls', namespace = 'djeocad')),
+       path('geocad/', include('django_geocad.urls', namespace = 'django_geocad')),
    ]
 
 You also need to add initial map defaults to ``settings.py`` (these are
@@ -97,9 +97,9 @@ sample ``base.html`` is provided among package templates).
    {% block content %}
    {% endblock content %}
 
-Package comes with several templates in the ``djeocad/templates/``
+Package comes with several templates in the ``django_geocad/templates/``
 directory. All templates have no styles. If you want to add your own
-styles, copy the templates in a ``my_project/templates/djeocad/``
+styles, copy the templates in a ``my_project/templates/django_geocad/``
 directory and override them. You will have to set:
 
 .. code:: python
@@ -111,6 +111,18 @@ directory and override them. You will have to set:
            # ...
        },
    ]
+
+.. _upgrading-to-version-070:
+
+Upgrading to version 0.7.0
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+WARNING, breaking changes (app name change). Before upgrading download
+your models as fixtures:
+``python manage.py dumpdata djeocad -o somefile.json``, open the file
+and change all occourences of ``djeocad.`` into ``django_geocad.``.
+Finally upgrade the package and reload the fixtures:
+``python manage.py loaddata somefile.json``
 
 .. _moving-from-version-040-to-050-or-later:
 
@@ -259,6 +271,7 @@ DXF extraction. Tested for Django 4.2 and 5.1 and Python 3.9, 3.10,
 Changelog
 ---------
 
+-  0.7.0: BREAKING CHANGES, new app name, see installation
 -  0.6.1: Changed a JSONField lookup that was treated differently by
    SQLite and Postgres
 -  0.6.0: Cannot have two ``Layers`` with the same name in the same

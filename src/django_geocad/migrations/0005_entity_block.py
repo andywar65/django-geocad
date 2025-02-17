@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("djeocad", "0004_entity"),
+        ("django_geocad", "0004_entity"),
     ]
 
     operations = [
@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="related_insertions",
-                to="djeocad.layer",
+                to="django_geocad.layer",
             ),
         ),
     ]

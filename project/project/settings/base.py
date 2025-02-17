@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     "djgeojson",
     "colorfield",
     # local
-    "djeocad",
+    "django_geocad",
 ]
 
 MIDDLEWARE = [

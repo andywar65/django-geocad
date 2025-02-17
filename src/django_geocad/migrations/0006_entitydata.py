@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("djeocad", "0005_entity_block"),
+        ("django_geocad", "0005_entity_block"),
     ]
 
     operations = [
@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="related_data",
-                        to="djeocad.entity",
+                        to="django_geocad.entity",
                     ),
                 ),
             ],

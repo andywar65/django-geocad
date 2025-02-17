@@ -15,7 +15,7 @@
         <td>{{ data.key }}</td>
         <td>{{ data.value }}</td>
         <td>
-          <button hx-post="{% url 'djeocad:data_delete' pk=data.id %}"
+          <button hx-post="{% url 'django_geocad:data_delete' pk=data.id %}"
                   hx-target="#entity-data"
           >
             {% trans "Delete" %}
@@ -30,7 +30,7 @@
 {% endif %}
 <form>
   {{ data_form }}
-  <button hx-post="{% url 'djeocad:data_create' pk=object.id %}"
+  <button hx-post="{% url 'django_geocad:data_create' pk=object.id %}"
           hx-target="#entity-data"
   >
     {% trans "Add" %}
