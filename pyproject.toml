@@ -5,8 +5,8 @@ target-version = ['py312']
 profile = "black"
 
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "project.settings.tests"
@@ -14,7 +14,7 @@ python_files = ["test_*.py", ]
 
 [project]
 name = "django-geocad"
-version = "0.6.1"
+version = "0.7.0"
 authors = [
   { name="andywar65", email="andy.war1965@gmail.com" },
 ]
@@ -45,16 +45,3 @@ dependencies = [
 
 [project.urls]
 Repository = "https://github.com/andywar65/django-geocad"
-
-[project.optional-dependencies]
-dev = [
-    "build",
-    "twine",
-    "coverage",
-    "environs[django]",
-    "psycopg[binary,pool]",
-]
-test = [
-    "environs[django]",
-    "psycopg[binary,pool]",
-]
