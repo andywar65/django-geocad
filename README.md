@@ -3,7 +3,7 @@ Django app that imports CAD drawings in Leaflet maps
 ## Overview
 Show CAD drawings in interactive web maps, download previously uploaded files with geo location, download CSV files with extracted data.
 ## Requirements
-This app is tested on Django (4.2 to 5.1) and Python (3.9 to 3.12). It heavily relies on outstanding [ezdxf](https://ezdxf.mozman.at/) for handling DXF files, [pyproj](https://pyproj4.github.io/pyproj/stable/) for geographic projections, [shapely](https://shapely.readthedocs.io/en/stable/manual.html) for polygon verification, [django-leaflet](https://django-leaflet.readthedocs.io/en/latest/) for handling maps, [django-geojson](https://django-geojson.readthedocs.io/en/latest/) for storing geodata, [django-colorfield](https://github.com/fabiocaccamo/django-colorfield) for admin color fields. The library relies on [GDAL](https://gdal.org), which is system specific.
+This app is tested on Django (4.2 to 5.1) and Python (3.9 to 3.13). It heavily relies on outstanding [ezdxf](https://ezdxf.mozman.at/) for handling DXF files, [pyproj](https://pyproj4.github.io/pyproj/stable/) for geographic projections, [shapely](https://shapely.readthedocs.io/en/stable/manual.html) for polygon verification, [django-leaflet](https://django-leaflet.readthedocs.io/en/latest/) for handling maps, [django-geojson](https://django-geojson.readthedocs.io/en/latest/) for storing geodata, [django-colorfield](https://github.com/fabiocaccamo/django-colorfield) for admin color fields. The library relies on [GDAL](https://gdal.org), which is system specific.
 ## Installation from PyPI
 Activate your virtual environment and install with:
 ```
@@ -64,6 +64,8 @@ TEMPLATES = [
     },
 ]
 ```
+### Upgrading to version 0.7.0
+WARNING, breaking changes (app name change). Before upgrading download your models as fixtures: `python manage.py dumpdata djeocad -o somefile.json`, open the file and change all occourences of `djeocad.` into `django_geocad.`. Finally upgrade the package and reload the fixtures: `python manage.py loaddata somefile.json`
 ### Moving from version 0.4.0 to 0.5.0 (or later)
 Version `0.5.0` has some breaking changes. Once you upgrade run the following management commands:
 ```
@@ -98,6 +100,7 @@ Geodata can be stored in DXF, but `ezdxf` library can't deal with all kind of Co
 ## Tests
 Tests with unittest, 96% coverage, missing some special conditions in DXF extraction. Tested for Django 4.2 and 5.1 and Python 3.9, 3.10, 3.11, 3.12 versions.
 ## Changelog
+- 0.7.0: BREAKING CHANGES, new app name, see installation
 - 0.6.1: Changed a JSONField lookup that was treated differently by SQLite and Postgres
 - 0.6.0: Cannot have two `Layers` with the same name in the same `Drawing` (this is consistent with CAD programs). Newly created `Layers` and new `Block` insertions will be recorded into the downloaded `DXF`.
 - 0.5.0: Breaking changes, see installation instructions. Added a `Block` FK field to `Entity` model (previously this information was stored in the `data` JSONField). Added `EntityData` model to replace information previously stored in the `data` JSONField.
