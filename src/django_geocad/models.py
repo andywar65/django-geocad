@@ -621,6 +621,9 @@ encoding="UTF-16" standalone="no" ?>
         # replace dxf
         doc.saveas(filename=self.dxf.path, encoding="utf-8", fmt="asc")
 
+    def write_csv_from_file(self, writer):
+        return
+
 
 class Layer(models.Model):
 

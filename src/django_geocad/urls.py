@@ -8,6 +8,7 @@ from .views import (
     change_block_insertion,
     create_entity_data,
     csv_download,
+    csv_download_from_file,
     delete_block_insertion,
     delete_entity_data,
     drawing_download,
@@ -27,6 +28,11 @@ urlpatterns = [
         "<pk>/csv",
         csv_download,
         name="drawing_csv",
+    ),
+    path(
+        "<pk>/csv/file",
+        csv_download_from_file,
+        name="drawing_csv_file",
     ),
     path(
         "<pk>/download",
