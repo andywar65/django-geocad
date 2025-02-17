@@ -22,7 +22,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("geocad/", include("djeocad.urls", namespace="djeocad")),
+    path("geocad/", include("django_geocad.urls", namespace="django_geocad")),
 ]
 
 if settings.DEBUG:

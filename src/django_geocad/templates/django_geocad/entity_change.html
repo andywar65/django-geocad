@@ -16,31 +16,31 @@
 
 {% block content %}
   <h2>{% trans "Change insertion of drawing" %}: {{ drawing.title }}</h2>
-  <form action="{% url 'djeocad:insertion_change' pk=object.id %}" method="post">
+  <form action="{% url 'django_geocad:insertion_change' pk=object.id %}" method="post">
     {% csrf_token %}
     {{ form }}
     <p>{% trans "Click on the map below to change coordinates" %}</p>
     <input type="submit" value="Submit">
   </form>
   <ul>
-    <li><a href="{% url 'djeocad:drawing_detail' pk=drawing.id %}">
+    <li><a href="{% url 'django_geocad:drawing_detail' pk=drawing.id %}">
       {% trans "Back to drawing" %}: {{ drawing.title }}
     </a></li>
     <li><a style="color: red;"
-           href="{% url 'djeocad:insertion_delete' pk=object.id %}">
+           href="{% url 'django_geocad:insertion_delete' pk=object.id %}">
       {% trans "Delete insertion" %}
     </a></li>
   </ul>
   <div id="entity-data" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-    {% include "djeocad/htmx/entity_data_list.html" %}
+    {% include "django_geocad/htmx/entity_data_list.html" %}
   </div>
   <script id="marker_data" type="application/json">{{ object|geojsonfeature:":insertion"|safe }}</script>
-  {% include "djeocad/map_data.html" %}
+  {% include "django_geocad/map_data.html" %}
   <script id="line_data" type="application/json">{{ lines|geojsonfeature|safe }}</script>
   {{ layer_list|json_script:"layer_data" }}
-  <script src="{% static 'djeocad/js/change_script.js'%}"></script>
+  <script src="{% static 'django_geocad/js/change_script.js'%}"></script>
   <div>
     {% leaflet_map "mymap" callback="window.map_init" %}
   </div>
-  <script src="{% static "djeocad/js/htmx.min.js" %}"></script>
+  <script src="{% static "django_geocad/js/htmx.min.js" %}"></script>
 {% endblock content %}

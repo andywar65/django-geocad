@@ -9,7 +9,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("djeocad", "0002_alter_drawing_options_drawing_designx_and_more"),
+        ("django_geocad", "0002_alter_drawing_options_drawing_designx_and_more"),
     ]
 
     operations = [
@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name="related_layers",
-                        to="djeocad.drawing",
+                        to="django_geocad.drawing",
                         verbose_name="Drawing",
                     ),
                 ),

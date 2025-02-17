@@ -16,7 +16,7 @@ from .models import Drawing, Entity, EntityData
 
 class DrawingListView(ListView):
     model = Drawing
-    template_name = "djeocad/drawing_list.html"
+    template_name = "django_geocad/drawing_list.html"
 
     def get_queryset(self) -> QuerySet[Any]:
         qs = Drawing.objects.exclude(epsg=None)
@@ -30,7 +30,7 @@ class DrawingListView(ListView):
 
 class DrawingDetailView(DetailView):
     model = Drawing
-    template_name = "djeocad/drawing_detail.html"
+    template_name = "django_geocad/drawing_detail.html"
 
     def get_context_data(self, **kwargs) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
@@ -74,7 +74,7 @@ class EntityCreateForm(ModelForm):
         return cleaned_data
 
 
-@permission_required("djeocad.change_drawing")
+@permission_required("django_geocad.change_drawing")
 def add_block_insertion(request, pk):
     drawing = get_object_or_404(Drawing, id=pk)
     blocks = drawing.related_layers.filter(is_block=True)
@@ -105,7 +105,7 @@ def add_block_insertion(request, pk):
             )
             ent.save()
             return HttpResponseRedirect(
-                reverse("djeocad:insertion_change", kwargs={"pk": ent.id})
+                reverse("django_geocad:insertion_change", kwargs={"pk": ent.id})
             )
     else:
         form = EntityCreateForm(
@@ -126,10 +126,10 @@ def add_block_insertion(request, pk):
     context["layer_list"] = list(dict.fromkeys(name_list))
     context["layer_list"] = [_("Layer - ") + s for s in context["layer_list"]]
     context["drawing"] = drawing
-    return TemplateResponse(request, "djeocad/entity_create.html", context)
+    return TemplateResponse(request, "django_geocad/entity_create.html", context)
 
 
-@permission_required("djeocad.change_drawing")
+@permission_required("django_geocad.change_drawing")
 def change_block_insertion(request, pk):
     object = get_object_or_404(Entity, id=pk)
     drawing = object.layer.drawing
@@ -155,7 +155,7 @@ def change_block_insertion(request, pk):
             }
             object.save()
             return HttpResponseRedirect(
-                reverse("djeocad:drawing_detail", kwargs={"pk": drawing.id})
+                reverse("django_geocad:drawing_detail", kwargs={"pk": drawing.id})
             )
     else:
         form = EntityCreateForm(
@@ -181,22 +181,22 @@ def change_block_insertion(request, pk):
     context["object"] = object
     context["related_data"] = object.related_data.all()
     context["data_form"] = EntityDataForm()
-    return TemplateResponse(request, "djeocad/entity_change.html", context)
+    return TemplateResponse(request, "django_geocad/entity_change.html", context)
 
 
-@permission_required("djeocad.change_drawing")
+@permission_required("django_geocad.change_drawing")
 def delete_block_insertion(request, pk):
     object = get_object_or_404(Entity, id=pk)
     drawing = object.layer.drawing
     object.delete()
     return HttpResponseRedirect(
-        reverse("djeocad:drawing_detail", kwargs={"pk": drawing.id})
+        reverse("django_geocad:drawing_detail", kwargs={"pk": drawing.id})
     )
 
 
 class EntityDataListView(ListView):
     model = EntityData
-    template_name = "djeocad/htmx/entity_data_list.html"
+    template_name = "django_geocad/htmx/entity_data_list.html"
     context_object_name = "related_data"
 
     def setup(self, request, *args, **kwargs):
@@ -219,7 +219,7 @@ class EntityDataForm(ModelForm):
         fields = ["key", "value"]
 
 
-@permission_required("djeocad.change_drawing")
+@permission_required("django_geocad.change_drawing")
 def create_entity_data(request, pk):
     if (
         "Hx-Request" not in request.headers
@@ -236,11 +236,11 @@ def create_entity_data(request, pk):
                 value=form.cleaned_data["value"],
             )
             return HttpResponseRedirect(
-                reverse("djeocad:data_list", kwargs={"pk": entity.id})
+                reverse("django_geocad:data_list", kwargs={"pk": entity.id})
             )
 
 
-@permission_required("djeocad.change_drawing")
+@permission_required("django_geocad.change_drawing")
 def delete_entity_data(request, pk):
     if (
         "Hx-Request" not in request.headers
@@ -250,7 +250,9 @@ def delete_entity_data(request, pk):
     object = get_object_or_404(EntityData, id=pk)
     entity = object.entity
     object.delete()
-    return HttpResponseRedirect(reverse("djeocad:data_list", kwargs={"pk": entity.id}))
+    return HttpResponseRedirect(
+        reverse("django_geocad:data_list", kwargs={"pk": entity.id})
+    )
 
 
 def csv_download(request, pk):

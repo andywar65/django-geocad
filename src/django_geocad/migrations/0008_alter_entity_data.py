@@ -2,19 +2,21 @@
 
 from django.db import migrations, models
 
-import djeocad.models
+import django_geocad.models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("djeocad", "0007_entity_rotation_entity_xscale_entity_yscale"),
+        ("django_geocad", "0007_entity_rotation_entity_xscale_entity_yscale"),
     ]
 
     operations = [
         migrations.AlterField(
             model_name="entity",
             name="data",
-            field=models.JSONField(default=djeocad.models.get_default_entity_data),
+            field=models.JSONField(
+                default=django_geocad.models.get_default_entity_data
+            ),
         ),
     ]

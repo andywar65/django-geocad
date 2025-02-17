@@ -1,2 +1,2 @@
-recursive-include src/djeocad/static *
-recursive-include src/djeocad/templates *
+recursive-include src/django_geocad/static *
+recursive-include src/django_geocad/templates *

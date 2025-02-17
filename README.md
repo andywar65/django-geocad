@@ -17,14 +17,14 @@ INSTALLED_APPS = [
     "leaflet",
     "djgeojson",
     "colorfield",
-    "djeocad",
+    "django_geocad",
 ]
 ```
 ```python
 # my_project/urls.py
 urlpatterns = [
     # ...
-    path('geocad/', include('djeocad.urls', namespace = 'djeocad')),
+    path('geocad/', include('django_geocad.urls', namespace = 'django_geocad')),
 ]
 ```
 You also need to add initial map defaults to `settings.py` (these are the settings for Rome, change them to your location of choice):
@@ -54,7 +54,7 @@ You also need a `base.html` template with following template blocks (a sample `b
 {% block content %}
 {% endblock content %}
 ```
-Package comes with several templates in the `djeocad/templates/` directory. All templates have no styles. If you want to add your own styles, copy the templates in a `my_project/templates/djeocad/` directory and override them. You will have to set:
+Package comes with several templates in the `django_geocad/templates/` directory. All templates have no styles. If you want to add your own styles, copy the templates in a `my_project/templates/django_geocad/` directory and override them. You will have to set:
 ```python
 TEMPLATES = [
     {

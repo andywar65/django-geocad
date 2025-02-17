@@ -9,8 +9,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from pyproj import Transformer
 
-from djeocad.models import Drawing, Entity, EntityData, Layer, cad2hex
-from djeocad.views import EntityCreateForm
+from django_geocad.models import Drawing, Entity, EntityData, Layer, cad2hex
+from django_geocad.views import EntityCreateForm
 
 
 @override_settings(MEDIA_ROOT=Path(settings.MEDIA_ROOT).joinpath("tests"))
@@ -56,14 +56,14 @@ class GeoCADModelTest(TestCase):
     def tearDownClass(cls):
         """Checks existing files, then removes them"""
         try:
-            path = Path(settings.MEDIA_ROOT).joinpath("uploads/djeocad/dxf/")
+            path = Path(settings.MEDIA_ROOT).joinpath("uploads/django_geocad/dxf/")
             list = [e for e in path.iterdir() if e.is_file()]
             for file in list:
                 Path(file).unlink()
         except FileNotFoundError:
             pass
         try:
-            path = Path(settings.MEDIA_ROOT).joinpath("uploads/djeocad/images/")
+            path = Path(settings.MEDIA_ROOT).joinpath("uploads/django_geocad/images/")
             list = [e for e in path.iterdir() if e.is_file()]
             for file in list:
                 Path(file).unlink()
@@ -313,9 +313,7 @@ class GeoCADModelTest(TestCase):
 
     def test_drawing_popup_image(self):
         draw = Drawing.objects.get(title="Referenced")
-        string = (
-            '<img src="/media/uploads/djeocad/images/image.jpg.256x192_q85_crop.jpg">'
-        )
+        string = '<img src="/media/uploads/django_geocad/images/image.jpg.256x192_q85_crop.jpg">'  # noqa
         string += f'<br><a href="/geocad/{draw.id}"><strong>{draw.title}</strong></a>'
         popup = {
             "content": string,
@@ -410,7 +408,7 @@ class GeoCADModelTest(TestCase):
     def test_drawing_list_view_status_code(self):
         response = self.client.get(
             reverse(
-                "djeocad:drawing_list",
+                "django_geocad:drawing_list",
             )
         )
         self.assertEqual(response.status_code, 200)
@@ -418,43 +416,43 @@ class GeoCADModelTest(TestCase):
     def test_drawing_detail_view_status_code(self):
         draw = Drawing.objects.get(title="Referenced")
         response = self.client.get(
-            reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
+            reverse("django_geocad:drawing_detail", kwargs={"pk": draw.id})
         )
         self.assertEqual(response.status_code, 200)
 
     def test_drawing_csv_view_status_code(self):
         draw = Drawing.objects.get(title="Referenced")
         response = self.client.get(
-            reverse("djeocad:drawing_csv", kwargs={"pk": draw.id})
+            reverse("django_geocad:drawing_csv", kwargs={"pk": draw.id})
         )
         self.assertEqual(response.status_code, 200)
 
     def test_drawing_download_view_status_code(self):
         draw = Drawing.objects.get(title="Referenced")
         response = self.client.get(
-            reverse("djeocad:drawing_download", kwargs={"pk": draw.id})
+            reverse("django_geocad:drawing_download", kwargs={"pk": draw.id})
         )
         self.assertEqual(response.status_code, 200)
 
     def test_drawing_list_view_template(self):
         response = self.client.get(
             reverse(
-                "djeocad:drawing_list",
+                "django_geocad:drawing_list",
             )
         )
-        self.assertTemplateUsed(response, "djeocad/drawing_list.html")
+        self.assertTemplateUsed(response, "django_geocad/drawing_list.html")
 
     def test_drawing_detail_view_template(self):
         draw = Drawing.objects.get(title="Referenced")
         response = self.client.get(
-            reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
+            reverse("django_geocad:drawing_detail", kwargs={"pk": draw.id})
         )
-        self.assertTemplateUsed(response, "djeocad/drawing_detail.html")
+        self.assertTemplateUsed(response, "django_geocad/drawing_detail.html")
 
     def test_drawing_list_view_unreferenced_in_context(self):
         response = self.client.get(
             reverse(
-                "djeocad:drawing_list",
+                "django_geocad:drawing_list",
             )
         )
         self.assertTrue("unreferenced" in response.context)
@@ -462,7 +460,7 @@ class GeoCADModelTest(TestCase):
     def test_drawing_list_view_unreferenced_length(self):
         response = self.client.get(
             reverse(
-                "djeocad:drawing_list",
+                "django_geocad:drawing_list",
             )
         )
         self.assertEqual(len(response.context["unreferenced"]), 2)
@@ -470,7 +468,7 @@ class GeoCADModelTest(TestCase):
     def test_drawing_detail_view_lines_in_context(self):
         draw = Drawing.objects.get(title="Referenced")
         response = self.client.get(
-            reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
+            reverse("django_geocad:drawing_detail", kwargs={"pk": draw.id})
         )
         self.assertTrue("lines" in response.context)
         self.assertTrue("layer_list" in response.context)
@@ -478,7 +476,7 @@ class GeoCADModelTest(TestCase):
     def test_drawing_detail_view_lines_length(self):
         draw = Drawing.objects.get(title="Referenced")
         response = self.client.get(
-            reverse("djeocad:drawing_detail", kwargs={"pk": draw.id})
+            reverse("django_geocad:drawing_detail", kwargs={"pk": draw.id})
         )
         self.assertEqual(len(response.context["lines"]), 6)
         self.assertEqual(len(response.context["layer_list"]), 4)
@@ -489,7 +487,7 @@ class GeoCADModelTest(TestCase):
         notref = Drawing.objects.get(title="Unreferenced")
         yesref = Drawing.objects.get(title="Referenced")
         response = self.client.post(
-            f"/admin/djeocad/drawing/{notref.id}/change/",
+            f"/admin/django_geocad/drawing/{notref.id}/change/",
             {
                 "title": notref.title,
                 "parent": yesref.id,
@@ -517,7 +515,7 @@ class GeoCADModelTest(TestCase):
         self.client.login(username="boss", password="p4s5w0r6")
         notref = Drawing.objects.get(title="Unreferenced")
         response = self.client.post(
-            f"/admin/djeocad/drawing/{notref.id}/change/",
+            f"/admin/django_geocad/drawing/{notref.id}/change/",
             {
                 "title": notref.title,
                 "parent": "",
@@ -549,7 +547,7 @@ class GeoCADModelTest(TestCase):
         self.client.login(username="boss", password="p4s5w0r6")
         notref = Drawing.objects.get(title="Unreferenced")
         response = self.client.post(
-            f"/admin/djeocad/drawing/{notref.id}/change/",
+            f"/admin/django_geocad/drawing/{notref.id}/change/",
             {
                 "title": notref.title,
                 "parent": "",
@@ -577,7 +575,7 @@ class GeoCADModelTest(TestCase):
         self.client.login(username="boss", password="p4s5w0r6")
         notref = Drawing.objects.get(title="Unreferenced")
         response = self.client.post(
-            f"/admin/djeocad/drawing/{notref.id}/change/",
+            f"/admin/django_geocad/drawing/{notref.id}/change/",
             {
                 "title": notref.title,
                 "parent": "",
@@ -614,20 +612,20 @@ class GeoCADModelTest(TestCase):
     def test_drawing_change_view_in_admin(self):
         self.client.login(username="boss", password="p4s5w0r6")
         notref = Drawing.objects.get(title="Unreferenced")
-        response = self.client.get(f"/admin/djeocad/drawing/{notref.id}/change/")
+        response = self.client.get(f"/admin/django_geocad/drawing/{notref.id}/change/")
         self.assertEqual(response.status_code, 200)
 
     def test_add_block_insertion_view(self):
         # test unlogged user
         draw = Drawing.objects.get(title="Referenced")
         response = self.client.get(
-            reverse("djeocad:insertion_create", kwargs={"pk": draw.id})
+            reverse("django_geocad:insertion_create", kwargs={"pk": draw.id})
         )
         self.assertEqual(response.status_code, 302)
         # test logged user
         self.client.login(username="boss", password="p4s5w0r6")
         response = self.client.get(
-            reverse("djeocad:insertion_create", kwargs={"pk": draw.id})
+            reverse("django_geocad:insertion_create", kwargs={"pk": draw.id})
         )
         self.assertEqual(response.status_code, 200)
         # test context
@@ -636,10 +634,10 @@ class GeoCADModelTest(TestCase):
         self.assertIn("layer_list", response.context)
         self.assertIn("drawing", response.context)
         # test template
-        self.assertTemplateUsed(response, "djeocad/entity_create.html")
+        self.assertTemplateUsed(response, "django_geocad/entity_create.html")
         # test wrong drawing id
         response = self.client.get(
-            reverse("djeocad:insertion_create", kwargs={"pk": 99})
+            reverse("django_geocad:insertion_create", kwargs={"pk": 99})
         )
         self.assertEqual(response.status_code, 404)
         layer = Layer.objects.get(drawing=draw, name="0")
@@ -648,7 +646,7 @@ class GeoCADModelTest(TestCase):
         self.assertEqual(block.name, "block")
         before = Entity.objects.count()
         response = self.client.post(
-            reverse("djeocad:insertion_create", kwargs={"pk": draw.id}),
+            reverse("django_geocad:insertion_create", kwargs={"pk": draw.id}),
             {
                 "layer": layer.id,
                 "block": block.id,
@@ -666,7 +664,7 @@ class GeoCADModelTest(TestCase):
         # check response redirects
         self.assertRedirects(
             response,
-            reverse("djeocad:insertion_change", kwargs={"pk": ent.id}),
+            reverse("django_geocad:insertion_change", kwargs={"pk": ent.id}),
             status_code=302,
             target_status_code=200,
         )
@@ -675,13 +673,13 @@ class GeoCADModelTest(TestCase):
         # test unlogged user
         ent = Entity.objects.exclude(block=None).last()
         response = self.client.get(
-            reverse("djeocad:insertion_change", kwargs={"pk": ent.id})
+            reverse("django_geocad:insertion_change", kwargs={"pk": ent.id})
         )
         self.assertEqual(response.status_code, 302)
         # test logged user
         self.client.login(username="boss", password="p4s5w0r6")
         response = self.client.get(
-            reverse("djeocad:insertion_change", kwargs={"pk": ent.id})
+            reverse("django_geocad:insertion_change", kwargs={"pk": ent.id})
         )
         self.assertEqual(response.status_code, 200)
         # test context
@@ -693,14 +691,14 @@ class GeoCADModelTest(TestCase):
         self.assertIn("related_data", response.context)
         self.assertIn("data_form", response.context)
         # test template
-        self.assertTemplateUsed(response, "djeocad/entity_change.html")
+        self.assertTemplateUsed(response, "django_geocad/entity_change.html")
         # test wrong entity id
         response = self.client.get(
-            reverse("djeocad:insertion_change", kwargs={"pk": 99})
+            reverse("django_geocad:insertion_change", kwargs={"pk": 99})
         )
         self.assertEqual(response.status_code, 404)
         response = self.client.post(
-            reverse("djeocad:insertion_change", kwargs={"pk": ent.id}),
+            reverse("django_geocad:insertion_change", kwargs={"pk": ent.id}),
             {
                 "layer": ent.layer.id,
                 "block": ent.block.id,
@@ -715,7 +713,9 @@ class GeoCADModelTest(TestCase):
         # check response redirects
         self.assertRedirects(
             response,
-            reverse("djeocad:drawing_detail", kwargs={"pk": ent.layer.drawing.id}),
+            reverse(
+                "django_geocad:drawing_detail", kwargs={"pk": ent.layer.drawing.id}
+            ),
             status_code=302,
             target_status_code=200,
         )
@@ -740,18 +740,21 @@ class GeoCADModelTest(TestCase):
         # test unlogged user
         ent = Entity.objects.exclude(block=None).last()
         response = self.client.get(
-            reverse("djeocad:insertion_delete", kwargs={"pk": ent.id})
+            reverse("django_geocad:insertion_delete", kwargs={"pk": ent.id})
         )
         self.assertEqual(response.status_code, 302)
         # test logged user
         self.client.login(username="boss", password="p4s5w0r6")
         response = self.client.get(
-            reverse("djeocad:insertion_delete", kwargs={"pk": ent.id}), follow=True
+            reverse("django_geocad:insertion_delete", kwargs={"pk": ent.id}),
+            follow=True,
         )
         # check response redirects
         self.assertRedirects(
             response,
-            reverse("djeocad:drawing_detail", kwargs={"pk": ent.layer.drawing.id}),
+            reverse(
+                "django_geocad:drawing_detail", kwargs={"pk": ent.layer.drawing.id}
+            ),
             status_code=302,
             target_status_code=200,
         )
@@ -759,7 +762,7 @@ class GeoCADModelTest(TestCase):
         self.assertFalse(Entity.objects.filter(id=ent.id).exists())
         # test wrong entity id
         response = self.client.get(
-            reverse("djeocad:insertion_delete", kwargs={"pk": 99})
+            reverse("django_geocad:insertion_delete", kwargs={"pk": 99})
         )
         self.assertEqual(response.status_code, 404)
 
@@ -767,19 +770,19 @@ class GeoCADModelTest(TestCase):
         # test unlogged user
         ent = Entity.objects.exclude(block=None).last()
         response = self.client.get(
-            reverse("djeocad:data_create", kwargs={"pk": ent.id})
+            reverse("django_geocad:data_create", kwargs={"pk": ent.id})
         )
         self.assertEqual(response.status_code, 302)
         self.client.login(username="boss", password="p4s5w0r6")
         # test logged user without htmx headers
         response = self.client.post(
-            reverse("djeocad:data_create", kwargs={"pk": ent.id}),
+            reverse("django_geocad:data_create", kwargs={"pk": ent.id}),
             {"key": "Foo", "value": "Bar"},
         )
         self.assertEqual(response.status_code, 404)
         # test logged user with htmx headers
         response = self.client.post(
-            reverse("djeocad:data_create", kwargs={"pk": ent.id}),
+            reverse("django_geocad:data_create", kwargs={"pk": ent.id}),
             {"key": "Foobinabi", "value": "Bar"},
             headers={"Hx-Request": "true"},
             follow=True,
@@ -787,7 +790,7 @@ class GeoCADModelTest(TestCase):
         # check response redirects
         self.assertRedirects(
             response,
-            reverse("djeocad:data_list", kwargs={"pk": ent.id}),
+            reverse("django_geocad:data_list", kwargs={"pk": ent.id}),
             status_code=302,
             target_status_code=200,
         )
@@ -795,7 +798,7 @@ class GeoCADModelTest(TestCase):
         self.assertTrue(EntityData.objects.filter(entity=ent, key="Foobinabi").exists())
         # test wrong entity id
         response = self.client.post(
-            reverse("djeocad:data_create", kwargs={"pk": 99}),
+            reverse("django_geocad:data_create", kwargs={"pk": 99}),
             {"key": "Foobinabi", "value": "Bar"},
             headers={"Hx-Request": "true"},
         )
@@ -810,31 +813,31 @@ class GeoCADModelTest(TestCase):
         )
         # test no permissions
         response = self.client.get(
-            reverse("djeocad:data_delete", kwargs={"pk": ent_data.id}),
+            reverse("django_geocad:data_delete", kwargs={"pk": ent_data.id}),
             headers={"Hx-Request": "true"},
         )
         self.assertEqual(response.status_code, 302)
         self.client.login(username="boss", password="p4s5w0r6")
         # test wrong entity id
         response = self.client.get(
-            reverse("djeocad:data_delete", kwargs={"pk": 99}),
+            reverse("django_geocad:data_delete", kwargs={"pk": 99}),
             headers={"Hx-Request": "true"},
         )
         self.assertEqual(response.status_code, 404)
         # test no headers
         response = self.client.get(
-            reverse("djeocad:data_delete", kwargs={"pk": ent_data.id}),
+            reverse("django_geocad:data_delete", kwargs={"pk": ent_data.id}),
         )
         self.assertEqual(response.status_code, 404)
         response = self.client.get(
-            reverse("djeocad:data_delete", kwargs={"pk": ent_data.id}),
+            reverse("django_geocad:data_delete", kwargs={"pk": ent_data.id}),
             headers={"Hx-Request": "true"},
             follow=True,
         )
         # check response redirects
         self.assertRedirects(
             response,
-            reverse("djeocad:data_list", kwargs={"pk": ent.id}),
+            reverse("django_geocad:data_list", kwargs={"pk": ent.id}),
             status_code=302,
             target_status_code=200,
         )
@@ -851,17 +854,17 @@ class GeoCADModelTest(TestCase):
             value="Bar",
         )
         response = self.client.get(
-            reverse("djeocad:data_list", kwargs={"pk": ent.id}),
+            reverse("django_geocad:data_list", kwargs={"pk": ent.id}),
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "djeocad/htmx/entity_data_list.html")
+        self.assertTemplateUsed(response, "django_geocad/htmx/entity_data_list.html")
         self.assertTrue("object" in response.context)
         self.assertTrue("data_form" in response.context)
         self.assertTrue("related_data" in response.context)
         self.assertEqual(response.context["related_data"].count(), 1)
         # test wrong entity
         response = self.client.get(
-            reverse("djeocad:data_list", kwargs={"pk": 99}),
+            reverse("django_geocad:data_list", kwargs={"pk": 99}),
         )
         self.assertEqual(response.status_code, 404)
 

@@ -46,7 +46,7 @@ In your Django project add:
        "leaflet",
        "djgeojson",
        "colorfield",
-       "djeocad",
+       "django_geocad",
    ]
 
 .. code:: python
@@ -54,7 +54,7 @@ In your Django project add:
    # my_project/urls.py
    urlpatterns = [
        # ...
-       path('geocad/', include('djeocad.urls', namespace = 'djeocad')),
+       path('geocad/', include('django_geocad.urls', namespace = 'django_geocad')),
    ]
 
 You also need to add initial map defaults to ``settings.py`` (these are
@@ -97,9 +97,9 @@ sample ``base.html`` is provided among package templates).
    {% block content %}
    {% endblock content %}
 
-Package comes with several templates in the ``djeocad/templates/``
+Package comes with several templates in the ``django_geocad/templates/``
 directory. All templates have no styles. If you want to add your own
-styles, copy the templates in a ``my_project/templates/djeocad/``
+styles, copy the templates in a ``my_project/templates/django_geocad/``
 directory and override them. You will have to set:
 
 .. code:: python
