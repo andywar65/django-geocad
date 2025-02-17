@@ -17,6 +17,7 @@ from PIL import ImageColor
 from pyproj import Transformer
 from pyproj.aoi import AreaOfInterest
 from pyproj.database import query_utm_crs_info
+from shapely import LineString
 from shapely.geometry import Point, shape
 from shapely.geometry.polygon import Polygon
 
@@ -622,7 +623,44 @@ encoding="UTF-16" standalone="no" ?>
         doc.saveas(filename=self.dxf.path, encoding="utf-8", fmt="asc")
 
     def write_csv_from_file(self, writer):
-        return
+        writer.writerow(
+            [
+                _("Layer"),
+                _("Elevation"),
+                _("Length"),
+                _("Width"),
+                _("Height"),
+                _("Diameter"),
+            ]
+        )
+        doc = ezdxf.readfile(self.dxf.path)
+        msp = doc.modelspace()
+        for type in ["LWPOLYLINE", "POLYLINE"]:
+            for ent in msp.query(type):
+                if ent.is_closed:
+                    continue
+                if ent.dxf.const_width == 0:
+                    continue
+                poly = LineString(ent.vertices_in_wcs())
+                if ent.dxf.thickness == 0:
+                    width = 0
+                    height = 0
+                    diameter = ent.dxf.const_width
+                else:
+                    width = ent.dxf.const_width
+                    height = ent.dxf.thickness
+                    diameter = 0
+                writer.writerow(
+                    [
+                        ent.dxf.layer,
+                        ent.dxf.elevation,
+                        poly.length,
+                        width,
+                        height,
+                        diameter,
+                    ]
+                )
+        return writer
 
 
 class Layer(models.Model):
