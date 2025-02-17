@@ -273,3 +273,14 @@ def drawing_download(request, pk):
     response["Content-Disposition"] = f"attachment; filename={drawing.title}.dxf"
 
     return response
+
+
+def csv_download_from_file(request, pk):
+    drawing = get_object_or_404(Drawing, id=pk)
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{drawing.title}.csv"'
+    writer = csv.writer(response)
+    writer = drawing.write_csv_from_file(writer)
+
+    return response
