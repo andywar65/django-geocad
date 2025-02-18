@@ -641,7 +641,7 @@ encoding="UTF-16" standalone="no" ?>
                     continue
                 if ent.dxf.const_width == 0:
                     continue
-                poly = LineString(ent.vertices_in_wcs())
+                poly = LineString(ent.vertices_in_ocs())
                 if ent.dxf.thickness == 0:
                     width = 0
                     height = 0
