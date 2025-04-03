@@ -14,7 +14,7 @@ python_files = ["test_*.py", "tests.py"]
 
 [project]
 name = "django-geocad"
-version = "0.7.0"
+version = "0.8.0"
 authors = [
   { name="andywar65", email="andy.war1965@gmail.com" },
 ]
