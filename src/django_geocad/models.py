@@ -23,6 +23,129 @@ from shapely.geometry.polygon import Polygon
 
 
 class Drawing(models.Model):
+    """
+    Drawing
+    =======
+
+    The `Drawing` class represents a drawing object in the application.
+    It is a Django model that stores information about a drawing,
+    including its metadata, associated files, and geospatial data.
+
+    Attributes
+    ----------
+
+    - **title** (`CharField`):
+    The name of the drawing. Limited to 50 characters.
+
+    - **dxf** (`FileField`):
+    The DXF file associated with the drawing.
+    The file is uploaded to the `uploads/django_geocad/dxf/` directory
+    and must have a `.dxf` extension.
+
+    - **parent** (`ForeignKey`):
+    A reference to another `Drawing` instance that acts as the parent
+    of this drawing. This field is optional.
+
+    - **image** (`ImageField`):
+    An optional image associated with the drawing. The image is
+    uploaded to the `uploads/django_geocad/images/` directory.
+
+    - **geom** (`PointField`):
+    The geospatial location of the drawing, represented as a point.
+    This field is optional.
+
+    - **designx** (`FloatField`):
+    The X-coordinate of the design point. Defaults to `0`.
+
+    - **designy** (`FloatField`):
+    The Y-coordinate of the design point. Defaults to `0`.
+
+    - **rotation** (`FloatField`):
+    The rotation of the drawing in degrees. Defaults to `0`.
+
+    - **epsg** (`IntegerField`):
+    The EPSG code representing the coordinate reference system (CRS)
+    of the drawing. This field is not editable and is optional.
+
+    Class Meta
+    ----------
+
+    - **verbose_name**:
+    "Drawing"
+
+    - **verbose_name_plural**:
+    "Drawings"
+
+    Methods
+    -------
+
+    - **__init__(self, \*args, \*\*kwargs)**:
+    Initializes the `Drawing` instance and stores the original
+    values of certain fields for later comparison.
+
+    - **__str__(self)**:
+    Returns the title of the drawing as its string representation.
+
+    - **get_absolute_url(self)**:
+    Returns the absolute URL for the detail view of the drawing instance.
+
+    - **popupContent(self)**:
+    Generates HTML content for a popup, including a clickable title
+    and an optional thumbnail image.
+
+    - **save(self, \*args, \*\*kwargs)**:
+    Saves the `Drawing` instance and processes the associated DXF file
+    to extract geospatial data.
+
+    - **delete_all_layers(self)**:
+    Deletes all layers associated with the drawing.
+
+    - **get_geodata_from_parent(self, \*args, \*\*kwargs)**:
+    Copies geospatial data from the parent drawing.
+
+    - **get_geodata_from_geom(self, \*args, \*\*kwargs)**:
+    Determines the EPSG code based on the `geom` field and updates
+    the drawing's geospatial data.
+
+    - **get_geodata_from_dxf(self, \*args, \*\*kwargs)**:
+    Extracts geospatial data from the associated DXF file.
+
+    - **extract_dxf(self, doc=None, refresh=False)**:
+    Processes the DXF file to extract entities, layers, and blocks.
+
+    - **prepare_transformers(self)**:
+    Prepares coordinate transformers for geospatial data processing.
+
+    - **fake_geodata(self, geodata, utm_wcs, rot)**:
+    Generates fake geospatial data for the drawing.
+
+    - **get_epsg_xml(self)**:
+    Returns an XML representation of the EPSG code.
+
+    - **prepare_layer_table(self, doc)**:
+    Prepares a table of layers from the DXF file.
+
+    - **extract_entities(self, msp, e_type, m, utm2world, layer_table)**:
+    Extracts entities of a specific type from the DXF file.
+
+    - **create_layer_entities(self, layer_table)**:
+    Creates entities for each layer in the layer table.
+
+    - **save_blocks(self, doc, m, utm2world)**:
+    Saves block definitions from the DXF file.
+
+    - **extract_insertions(self, ins, msp, m, utm2world, layer_table, block_table)**:
+    Extracts block insertions from the DXF file.
+
+    - **write_csv(self, writer)**:
+    Writes drawing data to a CSV file.
+
+    - **prepare_dxf_to_download(self)**:
+    Prepares a DXF file for download by adding new entities.
+
+    - **write_csv_from_file(self, writer)**:
+    Writes data extracted from the DXF file to a CSV file.
+    """
 
     title = models.CharField(
         _("Name"),
@@ -113,10 +236,34 @@ class Drawing(models.Model):
         return self.title
 
     def get_absolute_url(self):
+        """
+        Returns the absolute URL for the Drawing instance.
+
+        This method generates a URL for the detail view of the Drawing object
+        using the `reverse` function. The URL is constructed based on the
+        `django_geocad:drawing_detail` view and includes the primary key (id)
+        of the instance as a keyword argument.
+
+        :return: A string representing the absolute URL of the Drawing instance.
+        :rtype: str
+        """
+
         return reverse("django_geocad:drawing_detail", kwargs={"pk": self.id})
 
     @property
     def popupContent(self):
+        """
+        Generates the popup content for the Drawing instance.
+
+        This property constructs an HTML snippet that can be used as popup content
+        for the Drawing instance. It includes a clickable title linking to the
+        instance's detail view and optionally a thumbnail image if an image is
+        associated with the instance.
+
+        :return: A dictionary containing the popup content as HTML.
+        :rtype: dict
+        """
+
         url = self.get_absolute_url()
         title_str = f'<a href="{url}"><strong>{self.title}</strong></a>'
         image = self.image
