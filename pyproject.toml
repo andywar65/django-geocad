@@ -1,5 +1,5 @@
 [tool.black]
-target-version = ['py312']
+target-version = ['py314']
 
 [tool.isort]
 profile = "black"
@@ -25,13 +25,12 @@ classifiers = [
     "Operating System :: OS Independent",
     "Framework :: Django",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.14"
 dependencies = [
     "Django>=4.2",
     "django-colorfield",
