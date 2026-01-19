@@ -12,7 +12,7 @@ files with geo location, download CSV files with extracted data.
 Requirements
 ------------
 
-This app is tested on Django (4.2 to 5.2) and Python (3.9 to 3.13). It
+This app is tested on Django (4.2 to 6.0) and Python (3.9 to 3.14). It
 heavily relies on outstanding `ezdxf <https://ezdxf.mozman.at/>`__ for
 handling DXF files,
 `pyproj <https://pyproj4.github.io/pyproj/stable/>`__ for geographic
@@ -266,11 +266,13 @@ Tests
 
 Tests with unittest, 96% coverage, missing some special conditions in
 DXF extraction. Tested for Django 4.2 and 5.1 and Python 3.9, 3.10,
-3.11, 3.12 versions. Tested for Django 5.2 on Python 3.13.1
+3.11, 3.12 versions. Tested for Django 5.2 on Python 3.13.1 and Django
+6.0 on Python 3.14.2
 
 Changelog
 ---------
 
+-  0.9.0: Support for Dango 6.0 and Python 3.14
 -  0.8.0: Download CSV directly from file, not from DB (experimental).
    Support for Django 5.2
 -  0.7.0: BREAKING CHANGES, new app name, see installation
