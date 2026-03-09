@@ -448,9 +448,7 @@ encoding="UTF-16" standalone="no" ?>
 <AxisDirection>north</AxisDirection>
 </CoordinateSystemAxis>
 </Axis>
-</Dictionary>""" % {
-            "epsg": self.epsg
-        }
+</Dictionary>""" % {"epsg": self.epsg}
         return xml
 
     def prepare_layer_table(self, doc):
@@ -517,7 +515,7 @@ encoding="UTF-16" standalone="no" ?>
                                 key=key,
                                 value=value,
                             )
-                    except (AttributeError, ValueError):
+                    except AttributeError, ValueError:
                         # not true polygon, add to layer entity
                         layer_table[e.dxf.layer]["geometries"].append(
                             geo_proxy.__geo_interface__

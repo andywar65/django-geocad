@@ -31,8 +31,6 @@ class DrawingAdmin(LeafletGeoAdmin):
             messages.add_message(
                 request,
                 messages.WARNING,
-                _(
-                    """GeoData missing. Upload a DXF with GeoData,
-                    a Parent Drawing or select a Reference Point on the map"""
-                ),
+                _("""GeoData missing. Upload a DXF with GeoData,
+                    a Parent Drawing or select a Reference Point on the map"""),
             )
