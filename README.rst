@@ -272,6 +272,7 @@ DXF extraction. Tested for Django 4.2 and 5.1 and Python 3.9, 3.10,
 Changelog
 ---------
 
+-  0.9.1: Added referrer policy in maps
 -  0.9.0: Support for Dango 6.0 and Python 3.14
 -  0.8.0: Download CSV directly from file, not from DB (experimental).
    Support for Django 5.2
