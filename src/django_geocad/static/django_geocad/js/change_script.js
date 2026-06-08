@@ -11,6 +11,7 @@ function map_init(map, options) {
     const base_map = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
         maxZoom: 19,
+        referrerPolicy: 'strict-origin-when-cross-origin',
       }).addTo(map);
 
     const layer_control = L.control.layers(null).addTo(map);
