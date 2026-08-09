@@ -100,6 +100,7 @@ Geodata can be stored in DXF, but `ezdxf` library can't deal with all kind of Co
 ## Tests
 Tests with unittest, 96% coverage, missing some special conditions in DXF extraction. Tested for Django 4.2 and 5.1 and Python 3.9, 3.10, 3.11, 3.12 versions. Tested for Django 5.2 on Python 3.13.1 and Django 6.0 on Python 3.14.2
 ## Changelog
+- 0.9.1: Added referrer policy in maps
 - 0.9.0: Support for Django 6.0 and Python 3.14
 - 0.8.0: Download CSV directly from file, not from DB (experimental). Support for Django 5.2
 - 0.7.0: BREAKING CHANGES, new app name, see installation
